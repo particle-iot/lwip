@@ -124,7 +124,7 @@ void snmp_inc_udpoutdatagrams(void);
 #define snmp_inc_ipoutrequests()
 #define snmp_inc_ipunknownprotos()
 
-// ICMP
+/* ICMP */
 #define snmp_inc_icmpinmsgs()
 #define snmp_inc_icmpinerrors() 
 #define snmp_inc_icmpindestunreachs() 
@@ -151,7 +151,7 @@ void snmp_inc_udpoutdatagrams(void);
 #define snmp_inc_icmpouttimestampreps()
 #define snmp_inc_icmpoutaddrmasks()
 #define snmp_inc_icmpoutaddrmaskreps()
-// TCP
+/* TCP */
 #define snmp_inc_tcpactiveopens()
 #define snmp_inc_tcppassiveopens()
 #define snmp_inc_tcpattemptfails()
@@ -163,7 +163,7 @@ void snmp_inc_udpoutdatagrams(void);
 #define snmp_inc_tcpinerrs()
 #define snmp_inc_tcpoutrsts()
 
-// UDP
+/* UDP */
 #define snmp_inc_udpindatagrams()
 #define snmp_inc_udpnoports()
 #define snmp_inc_udpinerrors()
