@@ -164,7 +164,7 @@ ip_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp)
   netif = ip_route((struct ip_addr *)&(iphdr->dest));
   if(netif == NULL) {
     DEBUGF(IP_DEBUG, ("ip_forward: no forwarding route for 0x%lx found\n",
-		      iphdr->dest.addr));
+                      iphdr->dest.addr));
     snmp_inc_ipnoroutes();
     return;
   }

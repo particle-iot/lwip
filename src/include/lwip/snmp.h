@@ -129,7 +129,6 @@ void snmp_inc_udpoutdatagrams(void);
 #define snmp_inc_ipforwdatagrams()
 
 /* ICMP */
-
 #define snmp_inc_icmpinmsgs()
 #define snmp_inc_icmpinerrors() 
 #define snmp_inc_icmpindestunreachs() 
@@ -156,6 +155,7 @@ void snmp_inc_udpoutdatagrams(void);
 #define snmp_inc_icmpouttimestampreps()
 #define snmp_inc_icmpoutaddrmasks()
 #define snmp_inc_icmpoutaddrmaskreps()
+
 /* TCP */
 #define snmp_inc_tcpactiveopens()
 #define snmp_inc_tcppassiveopens()
