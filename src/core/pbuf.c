@@ -13,11 +13,18 @@
  * Multiple packets may be queued, also using this singly linked list.
  * This is called a "packet queue". So, a packet queue consists of one
  * or more pbuf chains, each of which consist of one or more pbufs.
+ * The differences between a pbuf chain and a packet queue are very
+ * subtle. Currently, queues are only supported in a limited section
+ * of lwIP, this is the etharp queueing code. Outside of this section
+ * no packet queues are supported as of yet.
  *
  * The last pbuf of a packet has a ->tot_len field that equals the
  * ->len field. It can be found by traversing the list. If the last
  * pbuf of a packet has a ->next field other than NULL, more packets
  * are on the queue.
+ *
+ * Therefore, looping through a pbuf of a single packet, has an
+ * loop end condition (tot_len == p->len), NOT (next == NULL).
  */
 
 /*
@@ -206,6 +213,7 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
   struct pbuf *p, *q, *r;
   u16_t offset;
   s32_t rem_len; /* remaining length */
+  DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_alloc(length=%u)\n", length));
 
   /* determine header offset */
   offset = 0;
@@ -233,6 +241,7 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
   case PBUF_POOL:
     /* allocate head of pbuf chain into p */
     p = pbuf_pool_alloc();
+    DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_alloc: allocated pbuf %p\n", p));
     if (p == NULL) {
 #ifdef PBUF_STATS
       ++lwip_stats.pbuf.err;
@@ -291,7 +300,7 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
       r = q;
     }
     /* end of chain */
-    r->next = NULL;
+    //r->next = NULL;
 
     break;
   case PBUF_RAM:
@@ -331,6 +340,7 @@ pbuf_alloc(pbuf_layer l, u16_t length, pbuf_flag flag)
   }
   /* set reference count */
   p->ref = 1;
+  DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_alloc(length=%u) == %p\n", length, (void *)p));
   return p;
 }
 
@@ -534,6 +544,7 @@ pbuf_free(struct pbuf *p)
     DEBUGF(PBUF_DEBUG | DBG_TRACE | 2, ("pbuf_free(p == NULL) was called.\n"));
     return 0;
   }
+  DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_free(%p)\n", (void *)p));
 
   PERF_START;
 
@@ -557,6 +568,7 @@ pbuf_free(struct pbuf *p)
     if (p->ref == 0) {
       /* remember next pbuf in chain for next iteration */
       q = p->next;
+      DEBUGF( PBUF_DEBUG | 2, ("pbuf_free: deallocating %p\n", (void *)p));
       /* is this a pbuf from the pool? */
       if (p->flags == PBUF_FLAG_POOL) {
         p->len = p->tot_len = PBUF_POOL_BUFSIZE;
@@ -575,6 +587,7 @@ pbuf_free(struct pbuf *p)
     /* p->ref > 0, this pbuf is still referenced to */
     /* (and so the remaining pbufs in chain as well) */
     } else {
+      DEBUGF( PBUF_DEBUG | 2, ("pbuf_free: %p has ref %u, ending here.\n", (void *)p, p->ref));
       /* stop walking through chain */
       p = NULL;
     }
@@ -661,7 +674,7 @@ pbuf_chain(struct pbuf *h, struct pbuf *t)
   p->next = t;
   /* t is now referenced to one more time */
   pbuf_ref(t);
-  DEBUGF(PBUF_DEBUG | DBG_FRESH | 2, ("pbuf_chain: referencing tail %p\n", (void *) t));
+  DEBUGF(PBUF_DEBUG | DBG_FRESH | 2, ("pbuf_chain: %p references %p\n", (void *)p, (void *)t));
 }
 
 /* For packet queueing. Note that queued packets must be dequeued first
@@ -869,6 +882,7 @@ pbuf_dechain(struct pbuf *p)
     /* q is no longer referenced by p, free it */
     DEBUGF(PBUF_DEBUG | DBG_STATE, ("pbuf_dechain: unreferencing %p\n", (void *) q));
     tail_gone = pbuf_free(q);
+    if (tail_gone > 0) DEBUGF(PBUF_DEBUG | DBG_STATE, ("pbuf_dechain: deallocated %p (as it is no longer referenced)\n", (void *) q));
     /* return remaining tail or NULL if deallocated */
   }
   /* assert tot_len invariant: (p->tot_len == p->len + (p->next? p->next->tot_len: 0) */
