@@ -228,15 +228,24 @@ pbuf_chain(struct pbuf *h, struct pbuf *t){
 
 struct pbuf *
 pbuf_take(struct pbuf *p){
-  struct pbuf **x;
+  struct pbuf **x, *tmp;
 
   LWIP_ASSERT("pbuf_take: p != NULL\n", p != NULL);
   LWIP_DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_take(%p)\n", (void*)p));
 
   /* iterate through pbuf chain */
   for(x=&p; (*x)!=NULL; x=&((*x)->next)){
-	*x = (*x)->manager->pbuf_take(p);
-	LWIP_ASSERT("buf_take()\n", *x==NULL);
+    tmp = (*x)->manager->pbuf_take(p);
+    if(tmp==NULL){
+      /* out of memory */
+      pbuf_free(p);
+      LWIP_DEBUGF(PBUF_DEBUG | 2,
+                  ("pbuf_take: failed to allocate replacement pbuf for %p\n",
+                   (void *)p));
+      return NULL;
+    }else{
+      *x = tmp;
+    }
   }
 
   LWIP_DEBUGF(PBUF_DEBUG | DBG_TRACE | 1,
