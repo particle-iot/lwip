@@ -49,21 +49,21 @@
 /** whether the network interface is 'up'. this is
  * a software flag used to control whether this network
  * interface is enabled. */
-#define NETIFF_UP 1
+#define NETIF_FLAGS_UP 1
 /** if set, the netif has broadcast capability */
-#define NETIFF_BROADCAST 2
+#define NETIF_FLAGS_BROADCAST 2
 /** if set, the netif is one end of a point-to-point connection */
-#define NETIFF_POINTTOPOINT 4
+#define NETIF_FLAGS_POINTTOPOINT 4
 /** if set, the interface is configured using DHCP */
-#define NETIFF_DHCP 8
+#define NETIF_FLAGS_DHCP 8
 
 /** 
  * generic data structure used for all lwIP network interfaces */
 struct netif {
-	/** pointer to next in linked list */
+  /** pointer to next in linked list */
   struct netif *next;
   /** The following two fields should be filled in by the
-     initialization function for the device driver. */
+      initialization function for the device driver. */
   char name[2];
   /** number of this interface */
   u8_t num;
@@ -92,6 +92,7 @@ struct netif {
   /** This field can be set by the device driver and could point
       to state information for the device. */
   void *state;
+  /** the DHCP client state information for this netif */
   struct dhcp_state *dhcp;
   /** link level hardware address of this interface */
   unsigned char hwaddr[NETIF_HWADDR_LEN];

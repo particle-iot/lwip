@@ -32,13 +32,15 @@
 #ifndef __LWIP_DEF_H__
 #define __LWIP_DEF_H__
 
+/* this might define NULL already */
+#include "arch/cc.h"
+
 #define UMAX(a, b)      ((a) > (b) ? (a) : (b))
 
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
 
-#include "arch/lib.h"
 
 #endif /* __LWIP_DEF_H__ */
 
