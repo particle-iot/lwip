@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
+ * Copyright (c) 2003 Luke Macpherson.
  * All rights reserved. 
  * 
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -26,51 +26,63 @@
  *
  * This file is part of the lwIP TCP/IP stack.
  * 
- * Author: Adam Dunkels <adam@sics.se>
+ * Author: Luke Macpherson <lukem@cse.unsw.edu.au>
  *
  */
 
-#ifndef __LWIP_PBUF_H__
-#define __LWIP_PBUF_H__
+#ifndef __LWIP_PBUF_NEW_H__
+#define __LWIP_PBUF_NEW_H__
 
 #include "arch/cc.h"
-
+#include "lwip/opt.h"
 
 #define PBUF_TRANSPORT_HLEN 20
 #define PBUF_IP_HLEN        20
+/* PBUF_LINK_HLEN is defined by lwip/opt.h */
 
-typedef enum {
-  PBUF_TRANSPORT,
-  PBUF_IP,
-  PBUF_LINK,
-  PBUF_RAW
-} pbuf_layer;
+#define PBUF_RAW        0
+#define PBUF_LINK       (PBUF_LINK_HLEN + PBUF_RAW)
+#define PBUF_IP	        (PBUF_IP_HLEN + PBUF_LINK)
+#define PBUF_TRANSPORT  (PBUF_TRANSPORT_HLEN + PBUF_IP)
 
-typedef enum {
-  PBUF_RAM,
-  PBUF_ROM,
-  PBUF_REF,
-  PBUF_POOL
-} pbuf_flag;
+/* These need to be abstracted:
+ *   pbuf_alloc()
+ *   pbuf_realloc()
+ *   pbuf_header()
+ *   pbuf_free()
+ */
 
-/* Definitions for the pbuf flag field (these are not the flags that
-   are passed to pbuf_alloc()). */
-#define PBUF_FLAG_RAM   0x00U    /* Flags that pbuf data is stored in RAM */
-#define PBUF_FLAG_ROM   0x01U    /* Flags that pbuf data is stored in ROM */
-#define PBUF_FLAG_POOL  0x02U    /* Flags that the pbuf comes from the pbuf pool */
-#define PBUF_FLAG_REF   0x04U    /* Flags thet the pbuf payload refers to RAM */
+/*
+ * These are generic:
+ *   pbuf_clen()
+ *   pbuf_ref() ???
+ *   pbuf_chain()
+ *   pbuf_queue()
+ *   pbuf_dequeue()
+ *   pbuf_take() - may not be needed anymore?
+ *   pbuf_dechain()
+ *   pbuf_ref_chain()
+ */
 
-/** indicates this packet was broadcast on the link */
-#define PBUF_FLAG_LINK_BROADCAST 0x80U
+struct pbuf_manager {
+  struct pbuf * (*pbuf_alloc_new)   (u16_t offset, u16_t size,
+                                     struct pbuf_manager *mgr, void *src);
+  void (*pbuf_realloc)          (struct pbuf *p, u16_t size);
+  void (*pbuf_free)             (struct pbuf *p);
+  u8_t (*pbuf_header)           (struct pbuf *p, s16_t header_size);
+};
 
 struct pbuf {
-  /** next pbuf in singly linked pbuf chain */
+  /* next pbuf in singly linked pbuf chain */
   struct pbuf *next;
 
-  /** pointer to the actual data in the buffer */
+  /* pointer to the actual data in the buffer */
   void *payload;
-  
-  /**
+
+  /* allocator functions for the buffer */
+  struct pbuf_manager *manager;
+
+  /*
    * total length of this buffer and all next buffers in chain
    * belonging to the same packet.
    *
@@ -79,19 +91,15 @@ struct pbuf {
    */
   u16_t tot_len;
   
-  /* length of this buffer */
-  u16_t len;  
+  /* length of this buffer (starting at payload) */
+  u16_t len;
 
-  /* flags telling the type of pbuf */
-  u16_t flags;
-  
-  /**
+  /*
    * the reference count always equals the number of pointers
    * that refer to this pbuf. This can be pointers from an application,
    * the stack itself, or pbuf->next pointers from a chain.
    */
   u16_t ref;
-  
 };
 
 /* pbuf_init():
@@ -101,16 +109,47 @@ struct pbuf {
    parameter specifies the size of the data allocated to those.  */
 void pbuf_init(void);
 
-struct pbuf *pbuf_alloc(pbuf_layer l, u16_t size, pbuf_flag flag);
-void pbuf_realloc(struct pbuf *p, u16_t size); 
-u8_t pbuf_header(struct pbuf *p, s16_t header_size);
-void pbuf_ref(struct pbuf *p);
-void pbuf_ref_chain(struct pbuf *p);
+/*
+ * abstracted pbuf interface functions
+ *   these can be replaced with #defines, but for the time being
+ *   we use functions so that we can check for stupidity
+ */
+
+struct pbuf *pbuf_alloc_new(u16_t offset, u16_t size,
+                            struct pbuf_manager *mgr, void *src);
+
+#define pbuf_alloc(o,s,m) pbuf_alloc_new(o,s,m,NULL)
+
+void pbuf_realloc(struct pbuf *p, u16_t size);
+
 u8_t pbuf_free(struct pbuf *p);
-u8_t pbuf_clen(struct pbuf *p);  
+
+u8_t pbuf_header(struct pbuf *p, s16_t header_size);
+
+/*
+ * generic pbuf interface functions
+ */
+void pbuf_ref_chain(struct pbuf *p);
+void pbuf_ref(struct pbuf *p);
+u8_t pbuf_clen(struct pbuf *p);
 void pbuf_cat(struct pbuf *h, struct pbuf *t);
 void pbuf_chain(struct pbuf *h, struct pbuf *t);
 struct pbuf *pbuf_take(struct pbuf *f);
 struct pbuf *pbuf_dechain(struct pbuf *p);
 
-#endif /* __LWIP_PBUF_H__ */
+/* all of the following code should go away eventually, but for the time 
+ * being is here for backward compatibility
+ */
+
+#include "pbuf-ram.h"
+#include "pbuf-rom.h"
+
+/* these replace the old allocator "flag" used by lwIP */
+extern struct pbuf_manager pbuf_pool_manager;
+extern struct pbuf_manager pbuf_ref_manager;
+
+/* these should be considered deprecated */
+#define PBUF_POOL  (&pbuf_ram_manager) /* use ram for the time being */
+#define PBUF_REF   (&pbuf_rom_manager) /* use rom for the time being */
+
+#endif /* __LWIP_PBUF_NEW_H__ */
