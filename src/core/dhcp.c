@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001-2003 Leon Woestenberg <leon.woestenberg@axon.tv>
+ * Copyright (c) 2001-2003 Leon Woestenberg <leon.woestenberg@gmx.net>
  * Copyright (c) 2001-2003 Axon Digital Design B.V., The Netherlands.
  * All rights reserved.
  *
@@ -30,23 +30,18 @@
  * are specifically granted permission to redistribute this
  * source code.
  * 
- * Author: Leon Woestenberg <leon.woestenberg@axon.tv>
+ * Author: Leon Woestenberg <leon.woestenberg@gmx.net>
  * 
- * This is a DHCP client for the lwIP TCP/IP stack, for releases newer than
- * lwIP 0.5.3 which has the new "etharp" module. It aims to conform with
- * RFC 2131 and RFC 2132.
+ * This is a DHCP client for the lwIP TCP/IP stack. It aims to conform
+ * with RFC 2131 and RFC 2132.
  *
- * KNOWN BUG:
- * - Parsing of DHCP messages which use file/sname field overloading will
- * probably fail. Additional support for this must go into dhcp_unfold().
  * TODO:
+ * - Proper parsing of DHCP messages exploiting file/sname field overloading.
  * - Add JavaDoc style documentation (API, internals).
- * - Make the unfold routine smarter to handle this
  * - Support for interfaces other than Ethernet (SLIP, PPP, ...)
- * - ...
  *
  * Please coordinate changes and requests with Leon Woestenberg
- * <leon.woestenberg@axon.tv>
+ * <leon.woestenberg@gmx.net>
  *
  * Integration with your code:
  *
@@ -57,9 +52,7 @@
  * Then have your application call dhcp_coarse_tmr() and
  * dhcp_fine_tmr() on the defined intervals.
  *
- * How to boot the DHCP client
- *
- * struct dhcp *client = dhcp_start(struct netif *netif);
+ * dhcp_start(struct netif *netif);
  * starts a DHCP client instance which configures the interface by
  * obtaining an IP address lease and maintaining it.
  *
@@ -155,8 +148,7 @@ static void dhcp_check(struct netif *netif)
   /* create an ARP query for the offered IP address, expecting that no host
      responds, as the IP address should not be in use. */
   p = etharp_query(netif, &dhcp->offered_ip_addr, NULL);
-  if (p != NULL)
-  {
+  if (p != NULL) {
     DEBUGF(DHCP_DEBUG, ("dhcp_check(): sending ARP request len %u", p->tot_len));
     result = dhcp->netif->linkoutput(netif, p);
     pbuf_free(p);
@@ -186,10 +178,6 @@ static void dhcp_handle_offer(struct dhcp *dhcp)
     ip_addr_set(&dhcp->offered_ip_addr, (struct ip_addr *)&dhcp->msg_in->yiaddr);
     DEBUGF(DHCP_DEBUG, ("dhcp_handle_offer(): offer for 0x%08lx", dhcp->offered_ip_addr.addr));
     dhcp_select(dhcp);
-  }
-  else
-  {
-    /* dhcp_start(restart); */
   }
 }
 

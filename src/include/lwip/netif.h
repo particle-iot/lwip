@@ -45,7 +45,7 @@
 
 /** must be the maximum of all used hardware address lengths
     across all types of interfaces in use */
-#define NETIF_HWADDR_LEN 6
+#define NETIF_MAX_HWADDR_LEN 6
 
 /** whether the network interface is 'up'. this is
  * a software flag used to control whether this network
@@ -64,23 +64,15 @@ struct netif {
   struct netif *next;
   /** The following fields should be filled in by the
       initialization function for the device driver. */
-  char name[2];
-  /** number of this interface */
-  u8_t num;
-  /** NETIF_FLAG_* */
-  u8_t flags;
-  /** maximum transfer unit (in bytes) */
-  u16_t mtu;
   
+  /** IP address configuration in network byte order */
   struct ip_addr ip_addr;
-  /** netmask in network byte order */
   struct ip_addr netmask;
   struct ip_addr gw;
 
   /** This function is called by the network device driver
       to pass a packet up the TCP/IP stack. */
   err_t (* input)(struct pbuf *p, struct netif *inp);
-
   /** This function is called by the IP module when it wants
       to send a packet on the interface. This function typically
       first resolves the hardware address, then sends the packet. */
@@ -98,7 +90,15 @@ struct netif {
   /** number of bytes used in hwaddr */
   unsigned char hwaddr_len;
   /** link level hardware address of this interface */
-  unsigned char hwaddr[NETIF_HWADDR_LEN];
+  unsigned char hwaddr[NETIF_MAX_HWADDR_LEN];
+  /** maximum transfer unit (in bytes) */
+  u16_t mtu;
+  /** descriptive abbreviation */
+  char name[2];
+  /** number of this interface */
+  u8_t num;
+  /** NETIF_FLAG_* */
+  u8_t flags;
 };
 
 /** The list of network interfaces. */
