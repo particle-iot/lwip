@@ -94,6 +94,8 @@ static void
 ip_reass_timer(void *arg)
 {
   (void)arg;
+  if (0) ip_reass_timer(arg);
+
   if (ip_reasstmr > 1) {
     ip_reasstmr--;
     sys_timeout(IP_REASS_TMO, ip_reass_timer, NULL);
