@@ -3,6 +3,9 @@
  * Address Resolution Protocol module for IP over Ethernet
  *
  * $Log: etharp.c,v $
+ * Revision 1.24.2.1  2003/02/10 22:42:59  likewise
+ * Massive amount of refactoring DHCP code.
+ *
  * Revision 1.24  2003/02/06 22:18:57  davidhaas
  * Add the following features and bugfixes:
  *
@@ -533,7 +536,7 @@ etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr, struct pbuf *p)
     DEBUGF(ETHARP_DEBUG, ("etharp_arp_input: incoming ARP reply\n"));
 #if (LWIP_DHCP && DHCP_DOES_ARP_CHECK)
     /* DHCP needs to know about ARP replies */
-    dhcp_arp_reply(&hdr->sipaddr);
+    dhcp_arp_reply(struct netif *netif, &hdr->sipaddr);
 #endif
     /* ARP reply directed to us? */
     if(ip_addr_cmp(&(hdr->dipaddr), &(netif->ip_addr))) {

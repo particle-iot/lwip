@@ -43,30 +43,31 @@
 #include "lwip/pbuf.h"
 #include "lwip/dhcp.h"
 
-/** must be the maximum of all used hardware address lengths */
+/** must be the maximum of all used hardware address lengths
+    across all types of interfaces in use */
 #define NETIF_HWADDR_LEN 6
 
 /** whether the network interface is 'up'. this is
  * a software flag used to control whether this network
- * interface is enabled. */
-#define NETIF_FLAGS_UP 1
+ * interface is enabled and processes traffic */
+#define NETIF_FLAG_UP 1
 /** if set, the netif has broadcast capability */
-#define NETIF_FLAGS_BROADCAST 2
+#define NETIF_FLAG_BROADCAST 2
 /** if set, the netif is one end of a point-to-point connection */
-#define NETIF_FLAGS_POINTTOPOINT 4
+#define NETIF_FLAG_POINTTOPOINT 4
 /** if set, the interface is configured using DHCP */
-#define NETIF_FLAGS_DHCP 8
+#define NETIF_FLAG_DHCP 8
 
-/** 
- * generic data structure used for all lwIP network interfaces */
+/** generic data structure used for all lwIP network interfaces */
 struct netif {
   /** pointer to next in linked list */
   struct netif *next;
-  /** The following two fields should be filled in by the
+  /** The following fields should be filled in by the
       initialization function for the device driver. */
   char name[2];
   /** number of this interface */
   u8_t num;
+  /** NETIF_FLAG_* */
   u8_t flags;
   /** maximum transfer unit (in bytes) */
   u16_t mtu;
@@ -93,7 +94,9 @@ struct netif {
       to state information for the device. */
   void *state;
   /** the DHCP client state information for this netif */
-  struct dhcp_state *dhcp;
+  struct dhcp *dhcp;
+  /** number of bytes used in hwaddr */
+  unsigned char hwaddr_len;
   /** link level hardware address of this interface */
   unsigned char hwaddr[NETIF_HWADDR_LEN];
 };
