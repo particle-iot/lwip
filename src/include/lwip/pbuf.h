@@ -143,13 +143,12 @@ struct pbuf *pbuf_dechain(struct pbuf *p);
 
 #include "pbuf-ram.h"
 #include "pbuf-rom.h"
+#include "pbuf-pool.h"
 
 /* these replace the old allocator "flag" used by lwIP */
-extern struct pbuf_manager pbuf_pool_manager;
 extern struct pbuf_manager pbuf_ref_manager;
 
 /* these should be considered deprecated */
-#define PBUF_POOL  (&pbuf_ram_manager) /* use ram for the time being */
 #define PBUF_REF   (&pbuf_rom_manager) /* use rom for the time being */
 
 #endif /* __LWIP_PBUF_NEW_H__ */

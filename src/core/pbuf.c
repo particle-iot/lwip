@@ -1,10 +1,12 @@
 #include "lwip/opt.h"
 #include "lwip/pbuf.h"
+#include "lwip/pbuf-pool.h"
 #include "lwip/sys.h"
 #include "arch/perf.h"
 
 void
 pbuf_init(void){
+  pbuf_pool_init();
   return;
 }
 
