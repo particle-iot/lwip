@@ -23,11 +23,12 @@ pbuf_alloc_new(u16_t offset, u16_t size, struct pbuf_manager *mgr, void *src){
 
 void
 pbuf_realloc(struct pbuf *p, u16_t new_len){
-  LWIP_ASSERT("pbuf_realloc(): NULL pbuf", p!=NULL);
-  LWIP_ASSERT("pbuf_realloc(): NULL pbuf manager", p->manager!=NULL);
   struct pbuf *q;
   u16_t rem_len; /* remaining length */
   s16_t grow;
+
+  LWIP_ASSERT("pbuf_realloc(): NULL pbuf", p!=NULL);
+  LWIP_ASSERT("pbuf_realloc(): NULL pbuf manager", p->manager!=NULL);
 
   /* desired length larger than current length? */
   if (new_len >= p->tot_len) {
