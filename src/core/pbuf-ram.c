@@ -49,13 +49,15 @@ struct pbuf *
 pbuf_ram_alloc(u16_t offset, u16_t size, struct pbuf_manager *mgr, void *src){
   struct pbuf_ram *p;
 
-  p = mem_malloc(MEM_ALIGN_SIZE(sizeof(struct pbuf_ram) + offset + size));
+  p = mem_malloc(MEM_ALIGN_SIZE(sizeof(struct pbuf_ram) + offset) +
+                 MEM_ALIGN_SIZE(size));
   if (p == NULL) {
+    UserPrint("pbuf_ram_alloc: mem_malloc failed!\n");
     return NULL;
   }
 
   p->next = NULL;
-  p->payload = MEM_ALIGN((void*)((u8_t*)p + sizeof(struct pbuf) + offset));
+  p->payload = MEM_ALIGN((void*)((u8_t*)p + sizeof(struct pbuf_ram) + offset));
   p->manager = mgr;
   p->tot_len = size;
   p->len = size;
@@ -84,6 +86,11 @@ pbuf_ram_free(struct pbuf *p){
   struct pbuf_ram *q = (struct pbuf_ram*)p;
   LWIP_ASSERT("pbuf_ram_free(): pbuf was not a ram pbuf!",
               (q->magic==PBUF_RAM_MAGIC));
+
+  /* make faults more obvious */
+  p->manager = NULL;
+  p->payload = NULL;
+
 #endif
 	mem_free(p);
 }
