@@ -89,7 +89,7 @@ pbuf_free(struct pbuf *p){
     return 0;
   }
 
-  LWIP_DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_free(%p)\n", (void *)p));
+  LWIP_DEBUGF(PBUF_DEBUG, ("pbuf_free(%p)\n", (void *)p));
 
   PERF_START;
 
@@ -152,7 +152,7 @@ pbuf_free(struct pbuf *p){
 
 void
 pbuf_ref_chain(struct pbuf *p){
-
+    LWIP_ASSERT("pbuf_ref_chain unimplemented!", 0);
 }
 
 void
@@ -173,6 +173,14 @@ pbuf_clen(struct pbuf *p){
   len = 0;
   while (p != NULL) {
     ++len;
+#if 0
+{
+    mem_ptr_t x = (mem_ptr_t)p;
+    if((x%sizeof(mem_ptr_t))!=0){
+        LWIP_ASSERT("pbuf not aligned!\n", 0);
+    }
+}
+#endif
     p = p->next;
   }
 
