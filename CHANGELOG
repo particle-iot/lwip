@@ -1,3 +1,10 @@
+(0.6.0RC1) Changes since version 0.5.2
+
+  ++ Bugfixes:
+  
+  * Memory leak fixes that occurred in several places or
+    situations.
+
 Changelog that precedes the move to Savannah:
 
 (0.5.3) Changes since version 0.5.2
