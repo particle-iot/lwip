@@ -4,6 +4,8 @@ TODO
     word-length, storage sizes and alignment. See the mailing lists for
     problems with exoteric architectures showing these problems.
     We still have to fix this neatly.
+  * This is the lukem-pbuf branch, which is being used to test out new 
+    flexible pbuf allocation code.
 
 HISTORY
 
