@@ -321,7 +321,7 @@ static void
 arp_timer(void *arg)
 {
   arp_tmr();
-  sys_timeout(ARP_TMR_INTERVAL, (sys_timeout_handler)arp_timer, NULL);
+  sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
 }
 /*-----------------------------------------------------------------------------------*/
 /*
@@ -350,6 +350,6 @@ ethernetif_init(struct netif *netif)
   low_level_init(netif);
   arp_init();
 
-  sys_timeout(ARP_TMR_INTERVAL, (sys_timeout_handler)arp_timer, NULL);
+  sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
 }
 /*-----------------------------------------------------------------------------------*/

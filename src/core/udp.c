@@ -28,7 +28,7 @@
  * 
  * Author: Adam Dunkels <adam@sics.se>
  *
- * $Id: udp.c,v 1.17.2.4 2003/02/19 12:27:06 likewise Exp $
+ * $Id: udp.c,v 1.17.2.5 2003/02/19 12:41:34 likewise Exp $
  */
 
 /*-----------------------------------------------------------------------------------*/
@@ -523,6 +523,7 @@ udp_connect(struct udp_pcb *pcb, struct ip_addr *ipaddr, u16_t port)
 
   ip_addr_set(&pcb->remote_ip, ipaddr);
   pcb->remote_port = port;
+/** TODO: this functionality belongs in upper layers */
 #if 0
   pcb->flags |= UDP_FLAGS_CONNECTED;
   /* Nail down local IP for netconn_addr()/getsockname() */

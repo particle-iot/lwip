@@ -36,6 +36,7 @@
 
 #include "lwip/opt.h"
 
+
 #if NO_SYS
 
 /* For a totally minimal and standalone system, we provide null
@@ -56,6 +57,11 @@ struct sys_timeout {u8_t dummy;};
 #define sys_mbox_free(m)
 
 #define sys_thread_new(t,a)
+
+/* We don't need protection if there is no OS */
+#define SYS_ARCH_DECL_PROTECT(lev)
+#define SYS_ARCH_PROTECT(lev)
+#define SYS_ARCH_UNPROTECT(lev)
 
 #else /* NO_SYS */
 
@@ -87,7 +93,7 @@ void sys_init(void);
  *
  */
 void sys_timeout(u32_t msecs, sys_timeout_handler h, void *arg);
-void sys_timeout_remove(sys_timeout_handler h, void *arg);
+void sys_untimeout(sys_timeout_handler h, void *arg);
 struct sys_timeouts *sys_arch_timeouts(void);
 
 /* Semaphore functions. */
@@ -110,11 +116,47 @@ void sys_mbox_fetch(sys_mbox_t mbox, void **msg);
    In some implementations they can provide a more light-weight protection
    mechanism than using semaphores. Otherwise semaphores can be used for
    implementation */
-u32_t sys_arch_protect(void);
-void sys_arch_unprotect(u32_t pval);
+#ifndef SYS_ARCH_PROTECT
+/** SYS_LIGHTWEIGHT_PROT
+ * define SYS_LIGHTWEIGHT_PROT in lwipopts.h if you want inter-task protection
+ * for certain critical regions during buffer allocation, deallocation and memory
+ * allocation and deallocation.
+ */
+#ifdef SYS_LIGHTWEIGHT_PROT
+
+/** SYS_ARCH_DECL_PROTECT
+ * declare a protection variable. This macro will default to defining a variable of
+ * type sys_prot_t. If a particular port needs a different implementation, then
+ * this macro may be defined in sys_arch.h.
+ */
+#define SYS_ARCH_DECL_PROTECT(lev) sys_prot_t lev
+/** SYS_ARCH_PROTECT
+ * Perform a "fast" protect. This could be implemented by
+ * disabling interrupts for an embedded system or by using a semaphore or
+ * mutex. The implementation should allow calling SYS_ARCH_PROTECT when
+ * already protected. The old protection level is returned in the variable
+ * "lev". This macro will default to calling the sys_arch_protect() function
+ * which should be implemented in sys_arch.c. If a particular port needs a
+ * different implementation, then this macro may be defined in sys_arch.h
+ */
+#define SYS_ARCH_PROTECT(lev) lev = sys_arch_protect()
+/** SYS_ARCH_UNPROTECT
+ * Perform a "fast" set of the protection level to "lev". This could be
+ * implemented by setting the interrupt level to "lev" within the MACRO or by
+ * using a semaphore or mutex.  This macro will default to calling the
+ * sys_arch_unprotect() function which should be implemented in
+ * sys_arch.c. If a particular port needs a different implementation, then
+ * this macro may be defined in sys_arch.h
+ */
+#define SYS_ARCH_UNPROTECT(lev) sys_arch_unprotect(lev)
+sys_prot_t sys_arch_protect(void);
+void sys_arch_unprotect(sys_prot_t pval);
+#endif /* SYS_LIGHTWEIGHT_PROT */
+
+#endif /* SYS_ARCH_PROTECT */
 
 /* Thread functions. */
-void sys_thread_new(void (* thread)(void *arg), void *arg);
+sys_thread_t sys_thread_new(void (* thread)(void *arg), void *arg);
 
 /* The following functions are used only in Unix code, and
    can be omitted when porting the stack. */
