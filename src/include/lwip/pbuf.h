@@ -50,6 +50,7 @@
  *   pbuf_realloc()
  *   pbuf_header()
  *   pbuf_free()
+ *   pbuf_take()
  */
 
 /*
@@ -59,7 +60,6 @@
  *   pbuf_chain()
  *   pbuf_queue()
  *   pbuf_dequeue()
- *   pbuf_take() - may not be needed anymore?
  *   pbuf_dechain()
  *   pbuf_ref_chain()
  */
@@ -70,6 +70,7 @@ struct pbuf_manager {
   void (*pbuf_realloc)          (struct pbuf *p, u16_t size);
   void (*pbuf_free)             (struct pbuf *p);
   u8_t (*pbuf_header)           (struct pbuf *p, s16_t header_size);
+  struct pbuf * (*pbuf_take)    (struct pbuf *f);
 };
 
 struct pbuf {
@@ -126,6 +127,8 @@ u8_t pbuf_free(struct pbuf *p);
 
 u8_t pbuf_header(struct pbuf *p, s16_t header_size);
 
+struct pbuf *pbuf_take(struct pbuf *f);
+
 /*
  * generic pbuf interface functions
  */
@@ -134,7 +137,6 @@ void pbuf_ref(struct pbuf *p);
 u8_t pbuf_clen(struct pbuf *p);
 void pbuf_cat(struct pbuf *h, struct pbuf *t);
 void pbuf_chain(struct pbuf *h, struct pbuf *t);
-struct pbuf *pbuf_take(struct pbuf *f);
 struct pbuf *pbuf_dechain(struct pbuf *p);
 
 /* all of the following code should go away eventually, but for the time 
@@ -144,11 +146,6 @@ struct pbuf *pbuf_dechain(struct pbuf *p);
 #include "pbuf-ram.h"
 #include "pbuf-rom.h"
 #include "pbuf-pool.h"
-
-/* these replace the old allocator "flag" used by lwIP */
-extern struct pbuf_manager pbuf_ref_manager;
-
-/* these should be considered deprecated */
-#define PBUF_REF   (&pbuf_rom_manager) /* use rom for the time being */
+#include "pbuf-ref.h"
 
 #endif /* __LWIP_PBUF_NEW_H__ */

@@ -64,6 +64,8 @@ void pbuf_ram_free(struct pbuf *p);
 
 u8_t pbuf_ram_header(struct pbuf *p, s16_t header_size);
 
+struct pbuf *pbuf_ram_take(struct pbuf *p);
+
 /* these replace the old allocator "flag" used by lwIP */
 extern struct pbuf_manager pbuf_ram_manager;
 

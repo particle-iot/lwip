@@ -31,84 +31,81 @@
  */
 
 #include "lwip/pbuf.h"
+#include "lwip/pbuf-rom.h"
 #include "lwip/pbuf-ram.h"
 #include "lwip/mem.h"
 
-struct pbuf_manager pbuf_ram_manager = {pbuf_ram_alloc,
-                                        pbuf_ram_realloc,
-                                        pbuf_ram_free,
-                                        pbuf_ram_header,
-					pbuf_ram_take};
+struct pbuf_manager pbuf_ref_manager = {pbuf_ref_alloc,
+                                        pbuf_ref_realloc,
+                                        pbuf_ref_free,
+                                        pbuf_ref_header,
+					pbuf_ref_take};
 
 void
-pbuf_ram_init(void){
+pbuf_ref_init(void){
   return;
 }
 
 struct pbuf *
-pbuf_ram_alloc(u16_t offset, u16_t size, struct pbuf_manager *mgr, void *src){
-  struct pbuf_ram *p;
+pbuf_ref_alloc(u16_t offset, u16_t size, struct pbuf_manager *mgr, void *src){
+  struct pbuf_ref *p;
 
-  p = mem_malloc(MEM_ALIGN_SIZE(sizeof(struct pbuf_ram) + offset + size));
+  p = mem_malloc(MEM_ALIGN_SIZE(sizeof(struct pbuf_ref)));
   if (p == NULL) {
     return NULL;
   }
 
   p->next = NULL;
-  p->payload = MEM_ALIGN((void*)((u8_t*)p + sizeof(struct pbuf) + offset));
+  p->payload = src;
   p->manager = mgr;
   p->tot_len = size;
   p->len = size;
   p->ref = 1;
 #ifdef LWIP_DEBUG
-  p->magic = PBUF_RAM_MAGIC;
+  p->magic = PBUF_REF_MAGIC;
 #endif
-
-  /* if source data is specified, copy it to the payload */
-  if(src!=NULL && size>0){
-    memcpy(p->payload, src, size);
-  }
 
   return (struct pbuf*)p;
 }
 
 void
-pbuf_ram_realloc(struct pbuf *p, u16_t size){
-  mem_realloc(p, ((u8_t*)p->payload - (u8_t*)p) + size);
+pbuf_ref_realloc(struct pbuf *p, u16_t size){
+  /* Can't realloc a rom pbuf, so we just return. This is ok because 
+   * pbuf_realloc only ever calls us to shrink the pbuf.
+   */
   return;
 }
 
 void
-pbuf_ram_free(struct pbuf *p){
+pbuf_ref_free(struct pbuf *p){
 #ifdef LWIP_DEBUG
-  struct pbuf_ram *q = (struct pbuf_ram*)p;
-  LWIP_ASSERT("pbuf_ram_free(): pbuf was not a ram pbuf!",
-              (q->magic==PBUF_RAM_MAGIC));
+  struct pbuf_ref *q = (struct pbuf_ref*)p;
+  LWIP_ASSERT("pbuf_ref_free(): pbuf was not a ref pbuf!",
+              (q->magic==PBUF_REF_MAGIC));
 #endif
 	mem_free(p);
 }
 
 u8_t
-pbuf_ram_header(struct pbuf *p, s16_t header_size){
-  mem_ptr_t min, payload;
-
-  LWIP_DEBUGF(PBUF_DEBUG, ("pbuf_ram_header(0x%p,%d) was called.\n",
-                           p, (int)header_size));
-
-  min = (mem_ptr_t)p + sizeof(struct pbuf_ram);
-  payload = (mem_ptr_t)p->payload;
-
-  if(payload - header_size >= min){
-    p->payload = (u8_t*)p->payload - header_size;
-    p->len += header_size;
-    p->tot_len += header_size;
-    return 0; /* success */
-  }
-
-  return 1; /* failure */
+pbuf_ref_header(struct pbuf *p, s16_t header_size){
+  return 1; /* fail - you can't resize a ref pbuf */
 }
 
 struct pbuf *
-pbuf_ram_take(struct pbuf *p){
-  return p; /* don't need to copy ram pbufs */
+pbuf_ref_take(struct pbuf *p){
+  struct pbuf *r;
+  r = pbuf_alloc_new(0, p->len, &pbuf_ram_manager, p->payload);
+  if(r==NULL)
+    return NULL;
+
+  /* instert r into the chain */
+  r->next = p->next;
+  r->tot_len = p->len;
+  LWIP_ASSERT("pbuf_ref_take: pbuf_alloc returned wrong length\n",
+              r->len==p->len);
+
+  /* free p */
+  p->manager->pbuf_free(p);
+
+  return r;
 }

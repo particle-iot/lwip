@@ -37,7 +37,8 @@
 struct pbuf_manager pbuf_rom_manager = {pbuf_rom_alloc,
                                         pbuf_rom_realloc,
                                         pbuf_rom_free,
-                                        pbuf_rom_header};
+                                        pbuf_rom_header,
+					pbuf_rom_take};
 
 void
 pbuf_rom_init(void){
@@ -87,4 +88,9 @@ pbuf_rom_free(struct pbuf *p){
 u8_t
 pbuf_rom_header(struct pbuf *p, s16_t header_size){
   return 1; /* fail - you can't resize a rom pbuf */
+}
+
+struct pbuf *
+pbuf_rom_take(struct pbuf *p){
+  return p; /* don't need to copy rom pbufs */
 }

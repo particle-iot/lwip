@@ -30,16 +30,16 @@
  *
  */
 
-#ifndef __LWIP_PBUF_POOL_H__
-#define __LWIP_PBUF_POOL_H__
+#ifndef __LWIP_PBUF_REF_H__
+#define __LWIP_PBUF_REF_H__
 
 #include "lwip/pbuf.h"
 
 #ifdef LWIP_DEBUG
-#define PBUF_POOL_MAGIC 0x2345
+#define PBUF_REF_MAGIC 0x8642
 #endif
 
-struct pbuf_pool {
+struct pbuf_ref {
   struct pbuf *next;
   void *payload;
   struct pbuf_manager *manager;
@@ -47,28 +47,28 @@ struct pbuf_pool {
   u16_t len;
   u16_t ref;
 
-  /* pool-specific fields follow */
+  /* rom-specific fields follow */
 #ifdef LWIP_DEBUGF
-  u16_t magic;  /* magic number for checking this is actually pool pbuf */
+  u16_t magic;  /* magic number for checking this is actually rom pbuf */
 #endif
 };
 
-void pbuf_pool_init(void);
+void pbuf_ref_init(void);
 
-struct pbuf *pbuf_pool_alloc(u16_t offset, u16_t size,
+struct pbuf *pbuf_ref_alloc(u16_t offset, u16_t size,
                             struct pbuf_manager *mgr, void *src);
 
-void pbuf_pool_realloc(struct pbuf *p, u16_t size);
+void pbuf_ref_realloc(struct pbuf *p, u16_t size);
 
-void pbuf_pool_free(struct pbuf *p);
+void pbuf_ref_free(struct pbuf *p);
 
-u8_t pbuf_pool_header(struct pbuf *p, s16_t header_size);
+u8_t pbuf_ref_header(struct pbuf *p, s16_t header_size);
 
-struct pbuf *pbuf_pool_take(struct pbuf *p);
+struct pbuf *pbuf_ref_take(struct pbuf *p);
 
 /* these replace the old allocator "flag" used by lwIP */
-extern struct pbuf_manager pbuf_pool_manager;
+extern struct pbuf_manager pbuf_ref_manager;
 
-#define PBUF_POOL   (&pbuf_pool_manager)
+#define PBUF_REF   (&pbuf_ref_manager)
 
-#endif /* __LWIP_PBUF_POOL_H__ */
+#endif /* __LWIP_PBUF_REF_H__ */

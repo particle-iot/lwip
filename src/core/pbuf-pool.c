@@ -46,7 +46,8 @@
 struct pbuf_manager pbuf_pool_manager = {pbuf_pool_alloc,
                                         pbuf_pool_realloc,
                                         pbuf_pool_free,
-                                        pbuf_pool_header};
+                                        pbuf_pool_header,
+					pbuf_pool_take};
 
 
 static u8_t pbuf_pool_memory[(PBUF_POOL_SIZE *
@@ -329,4 +330,9 @@ pbuf_pool_header(struct pbuf *p, s16_t header_size){
   }
 
   return 1; /* failure */
+}
+
+struct pbuf *
+pbuf_pool_take(struct pbuf *p){
+  return p; /* don't need to copy pool pbufs */
 }

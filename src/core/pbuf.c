@@ -226,9 +226,22 @@ pbuf_chain(struct pbuf *h, struct pbuf *t){
 }
 
 struct pbuf *
-pbuf_take(struct pbuf *f){
-  LWIP_ASSERT("pbuf_take() unimplemented", 0);
-  return NULL;
+pbuf_take(struct pbuf *p){
+  struct pbuf **x;
+
+  LWIP_ASSERT("pbuf_take: p != NULL\n", p != NULL);
+  LWIP_DEBUGF(PBUF_DEBUG | DBG_TRACE | 3, ("pbuf_take(%p)\n", (void*)p));
+
+  /* iterate through pbuf chain */
+  for(x=&p; (*x)!=NULL; x=&((*x)->next)){
+	*x = (*x)->manager->pbuf_take(p);
+	LWIP_ASSERT("buf_take()\n", *x==NULL);
+  }
+
+  LWIP_DEBUGF(PBUF_DEBUG | DBG_TRACE | 1,
+              ("pbuf_take: end of chain reached.\n"));
+
+  return *x;
 }
 
 struct pbuf *
