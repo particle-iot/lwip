@@ -68,7 +68,9 @@ pbuf_rom_alloc(u16_t offset, u16_t size, struct pbuf_manager *mgr, void *src){
 
 void
 pbuf_rom_realloc(struct pbuf *p, u16_t size){
-  LWIP_ASSERT("pbuf_rom_realloc() unimplemented\n", 0);
+  /* Can't realloc a rom pbuf, so we just return. This is ok because 
+   * pbuf_realloc only ever calls us to shrink the pbuf.
+   */
   return;
 }
 
@@ -84,5 +86,5 @@ pbuf_rom_free(struct pbuf *p){
 
 u8_t
 pbuf_rom_header(struct pbuf *p, s16_t header_size){
-  return 1;
+  return 1; /* fail - you can't resize a rom pbuf */
 }
