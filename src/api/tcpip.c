@@ -49,6 +49,7 @@
 #include "lwip/ip.h"
 #include "netif/etharp.h"
 #include "netif/ppp/pppoe.h"
+#include "netif/lowpan6.h"
 
 #define TCPIP_MSG_VAR_REF(name)     API_VAR_REF(name)
 #define TCPIP_MSG_VAR_DECLARE(name) API_VAR_DECLARE(struct tcpip_msg, name)
@@ -115,6 +116,11 @@ tcpip_thread(void *arg)
       } else
 #endif /* LWIP_ETHERNET */
 #if LWIP_IPV6
+#if LWIP_6LOWPAN
+      if (msg->msg.inp.netif->flags & NETIF_FLAG_LOWPAN6) {
+        lowpan6_input(msg->msg.inp.p, msg->msg.inp.netif);
+      } else
+#endif /* LWIP_6LOWPAN */
       if (((*(u8_t*)(msg->msg.inp.p->payload)) & 0xf0) == 0x60) {
           ip6_input(msg->msg.inp.p, msg->msg.inp.netif);
       } else
