@@ -157,10 +157,24 @@
 #endif
 
 /**
+ * PPP_IPCP_OVERRIDE==1: third-party IPCP implementation
+ */
+#ifndef PPP_IPCP_OVERRIDE
+#define PPP_IPCP_OVERRIDE               0
+#endif
+
+/**
  * PPP_IPV6_SUPPORT==1: Enable PPP IPv6 support
  */
 #ifndef PPP_IPV6_SUPPORT
 #define PPP_IPV6_SUPPORT                (LWIP_IPV6)
+#endif
+
+/**
+ * PPP_IPV6CP_OVERRIDE==1: third-party IPV6CP implementation
+ */
+#ifndef PPP_IPV6CP_OVERRIDE
+#define PPP_IPV6CP_OVERRIDE             0
 #endif
 
 /**

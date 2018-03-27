@@ -402,21 +402,25 @@ struct ppp_pcb_s {
 #endif /* MPPE_SUPPORT */
 #endif /* CCP_SUPPORT */
 
-#if PPP_IPV4_SUPPORT
+#if PPP_IPV4_SUPPORT && !PPP_IPCP_OVERRIDE
   fsm ipcp_fsm;                   /* IPCP fsm structure */
   ipcp_options ipcp_wantoptions;  /* Options that we want to request */
   ipcp_options ipcp_gotoptions;   /* Options that peer ack'd */
   ipcp_options ipcp_allowoptions; /* Options we allow peer to request */
   ipcp_options ipcp_hisoptions;   /* Options that we ack'd */
-#endif /* PPP_IPV4_SUPPORT */
+#else
+  void* ipcp_ctx;
+#endif /* PPP_IPV4_SUPPORT && !PPP_IPCP_OVERRIDE*/
 
-#if PPP_IPV6_SUPPORT
+#if PPP_IPV6_SUPPORT && !PPP_IPV6CP_OVERRIDE
   fsm ipv6cp_fsm;                     /* IPV6CP fsm structure */
   ipv6cp_options ipv6cp_wantoptions;  /* Options that we want to request */
   ipv6cp_options ipv6cp_gotoptions;   /* Options that peer ack'd */
   ipv6cp_options ipv6cp_allowoptions; /* Options we allow peer to request */
   ipv6cp_options ipv6cp_hisoptions;   /* Options that we ack'd */
-#endif /* PPP_IPV6_SUPPORT */
+#else
+  void* ipv6cp_ctx;
+#endif /* PPP_IPV6_SUPPORT && !PPP_IPV6CP_OVERRIDE */
 };
 
 /************************
