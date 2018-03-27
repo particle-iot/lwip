@@ -366,10 +366,18 @@ static void
 ip6_forward(struct pbuf *p, struct ip6_hdr *iphdr, struct netif *inp)
 {
   struct netif *netif;
+  u32_t flags = 0;
+
+#ifdef LWIP_HOOK_IP6_FORWARD_PRE_ROUTING
+  if (LWIP_HOOK_IP6_FORWARD_PRE_ROUTING(p, iphdr, inp, &flags)) {
+    /* the packet will not be forwarded */
+    return;
+  }
+#endif /* LWIP_HOOK_IP6_FORWARD_PRE_ROUTING */
 
   /* do not forward link-local or loopback addresses */
-  if (ip6_addr_islinklocal(ip6_current_dest_addr()) ||
-      ip6_addr_isloopback(ip6_current_dest_addr())) {
+  if ((ip6_addr_islinklocal(ip6_current_dest_addr()) ||
+      ip6_addr_isloopback(ip6_current_dest_addr())) && !(flags & LWIP_IP6_FORWARD_FLAG_FORCE_ROUTE)) {
     LWIP_DEBUGF(IP6_DEBUG, ("ip6_forward: not forwarding link-local address.\n"));
     IP6_STATS_INC(ip6.rterr);
     IP6_STATS_INC(ip6.drop);
@@ -378,6 +386,14 @@ ip6_forward(struct pbuf *p, struct ip6_hdr *iphdr, struct netif *inp)
 
   /* Find network interface where to forward this IP packet to. */
   netif = ip6_route(IP6_ADDR_ANY6, ip6_current_dest_addr());
+
+#ifdef LWIP_HOOK_IP6_FORWARD_POST_ROUTING
+  if (LWIP_HOOK_IP6_FORWARD_POST_ROUTING(p, iphdr, inp, netif, &flags)) {
+    /* the packet will not be forwarded */
+    return;
+  }
+#endif /* LWIP_HOOK_IP6_FORWARD_POST_ROUTING */
+
   if (netif == NULL) {
     LWIP_DEBUGF(IP6_DEBUG, ("ip6_forward: no route for %"X16_F":%"X16_F":%"X16_F":%"X16_F":%"X16_F":%"X16_F":%"X16_F":%"X16_F"\n",
         IP6_ADDR_BLOCK1(ip6_current_dest_addr()),
@@ -390,7 +406,7 @@ ip6_forward(struct pbuf *p, struct ip6_hdr *iphdr, struct netif *inp)
         IP6_ADDR_BLOCK8(ip6_current_dest_addr())));
 #if LWIP_ICMP6
     /* Don't send ICMP messages in response to ICMP messages */
-    if (IP6H_NEXTH(iphdr) != IP6_NEXTH_ICMP6) {
+    if (IP6H_NEXTH(iphdr) != IP6_NEXTH_ICMP6 && !(flags & LWIP_IP6_FORWARD_FLAG_NO_ICMP_REPLY)) {
       icmp6_dest_unreach(p, ICMP6_DUR_NO_ROUTE);
     }
 #endif /* LWIP_ICMP6 */
@@ -403,9 +419,9 @@ ip6_forward(struct pbuf *p, struct ip6_hdr *iphdr, struct netif *inp)
    * outside of their zone. We determined the zone a bit earlier, so we know
    * that the address is properly zoned here, so we can safely use has_zone.
    * Also skip packets with a loopback source address (link-local implied). */
-  if ((ip6_addr_has_zone(ip6_current_src_addr()) &&
+  if (((ip6_addr_has_zone(ip6_current_src_addr()) &&
       !ip6_addr_test_zone(ip6_current_src_addr(), netif)) ||
-      ip6_addr_isloopback(ip6_current_src_addr())) {
+      ip6_addr_isloopback(ip6_current_src_addr())) && !(flags & LWIP_IP6_FORWARD_FLAG_FORCE_ROUTE)) {
     LWIP_DEBUGF(IP6_DEBUG, ("ip6_forward: not forwarding packet beyond its source address zone.\n"));
     IP6_STATS_INC(ip6.rterr);
     IP6_STATS_INC(ip6.drop);
@@ -414,20 +430,22 @@ ip6_forward(struct pbuf *p, struct ip6_hdr *iphdr, struct netif *inp)
 #endif /* LWIP_IPV6_SCOPES */
   /* Do not forward packets onto the same network interface on which
    * they arrived. */
-  if (netif == inp) {
+  if (netif == inp && !(flags & LWIP_IP6_FORWARD_FLAG_FORCE_ROUTE)) {
     LWIP_DEBUGF(IP6_DEBUG, ("ip6_forward: not bouncing packets back on incoming interface.\n"));
     IP6_STATS_INC(ip6.rterr);
     IP6_STATS_INC(ip6.drop);
     return;
   }
 
-  /* decrement HL */
-  IP6H_HOPLIM_SET(iphdr, IP6H_HOPLIM(iphdr) - 1);
+  if (!(flags & LWIP_IP6_FORWARD_FLAG_NO_HOP_LIMIT_DECREMENT)) {
+    /* decrement HL */
+    IP6H_HOPLIM_SET(iphdr, IP6H_HOPLIM(iphdr) - 1);
+  }
   /* send ICMP6 if HL == 0 */
   if (IP6H_HOPLIM(iphdr) == 0) {
 #if LWIP_ICMP6
     /* Don't send ICMP messages in response to ICMP messages */
-    if (IP6H_NEXTH(iphdr) != IP6_NEXTH_ICMP6) {
+    if (IP6H_NEXTH(iphdr) != IP6_NEXTH_ICMP6 && !(flags & LWIP_IP6_FORWARD_FLAG_NO_ICMP_REPLY)) {
       icmp6_time_exceeded(p, ICMP6_TE_HL);
     }
 #endif /* LWIP_ICMP6 */
@@ -590,6 +608,13 @@ ip6_input(struct pbuf *p, struct netif *inp)
   ip_data.current_netif = inp;
   ip_data.current_input_netif = inp;
 
+#ifdef LWIP_HOOK_IP6_INPUT_POST_VALIDATION
+  if (LWIP_HOOK_IP6_INPUT_POST_VALIDATION(p, inp)) {
+    /* the packet has been eaten */
+    return ERR_OK;
+  }
+#endif /* LWIP_HOOK_IP6_INPUT_POST_VALIDATION */
+
   /* match packet against an interface, i.e. is this packet for us? */
   if (ip6_addr_ismulticast(ip6_current_dest_addr())) {
     /* Always joined to multicast if-local and link-local all-nodes group. */
@@ -619,7 +644,15 @@ ip6_input(struct pbuf *p, struct netif *inp)
     }
 #endif /* LWIP_IPV6_MLD */
     else {
-      netif = NULL;
+#ifdef LWIP_HOOK_IP6_INPUT_ACCEPT_MULTICAST
+      if (LWIP_HOOK_IP6_INPUT_ACCEPT_MULTICAST(p, inp, ip6_current_dest_addr())) {
+        netif = inp;
+      } else {
+#else
+      {
+#endif /* LWIP_HOOK_IP6_ACCEPT_MULTICAST */
+        netif = NULL;
+      }
     }
   } else {
     /* start trying with inp. if that's not acceptable, start walking the
@@ -686,6 +719,10 @@ netif_found:
     if (!ip6_addr_ismulticast(ip6_current_dest_addr())) {
       /* try to forward IP packet on (other) interfaces */
       ip6_forward(p, ip6hdr, inp);
+    } else {
+#if LWIP_HOOK_IP6_ROUTE_MULTICAST
+      LWIP_HOOK_IP6_ROUTE_MULTICAST(p, ip6hdr, inp);
+#endif /* LWIP_HOOK_IP6_ROUTE_MULTICAST */
     }
 #endif /* LWIP_IPV6_FORWARD */
     pbuf_free(p);
@@ -700,6 +737,13 @@ netif_found:
 
   /* Init header length. */
   hlen = hlen_tot = IP6_HLEN;
+
+#ifdef LWIP_HOOK_IP6_INPUT_POST_LOCAL_HANDLING
+  /* pbuf_ref() the packet so it is not deallocated by the upper levels before
+   * the hook is executed.
+   */
+  pbuf_ref(p);
+#endif /* LWIP_HOOK_IP6_INPUT_POST_LOCAL_HANDLING */
 
   /* Move to payload. */
   pbuf_remove_header(p, IP6_HLEN);
@@ -1104,6 +1148,18 @@ options_done:
       break;
     }
   }
+
+#ifdef LWIP_HOOK_IP6_INPUT_POST_LOCAL_HANDLING
+  if (p->payload != ip6hdr) {
+    /* p points to IPv6 header again for post-local hook */
+    pbuf_add_header_force(p, hlen_tot);
+  }
+  LWIP_HOOK_IP6_INPUT_POST_LOCAL_HANDLING(p, ip6hdr, inp, IP6H_NEXTH(ip6hdr));
+#endif /* LWIP_HOOK_IP6_INPUT_POST_LOCAL_HANDLING */
+
+#ifdef LWIP_HOOK_IP6_INPUT_POST_LOCAL_HANDLING
+  pbuf_free(p);
+#endif /* LWIP_HOOK_IP6_INPUT_POST_LOCAL_HANDLING */
 
 ip6_input_cleanup:
   ip_data.current_netif = NULL;
