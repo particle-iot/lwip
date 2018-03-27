@@ -566,6 +566,10 @@ mld6_send(struct netif *netif, struct mld_group *group, u8_t type)
   struct pbuf *p;
   const ip6_addr_t *src_addr;
 
+  if (!netif_is_flag_set(netif, NETIF_FLAG_MLD6)) {
+    return;
+  }
+
   /* Allocate a packet. Size is MLD header + IPv6 Hop-by-hop options header. */
   p = pbuf_alloc(PBUF_IP, sizeof(struct mld_header) + MLD6_HBH_HLEN, PBUF_RAM);
   if (p == NULL) {

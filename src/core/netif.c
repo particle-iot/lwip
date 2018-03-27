@@ -904,8 +904,10 @@ netif_issue_reports(struct netif *netif, u8_t report_type)
 #if LWIP_IPV6
   if (report_type & NETIF_REPORT_TYPE_IPV6) {
 #if LWIP_IPV6_MLD
-    /* send mld memberships */
-    mld6_report_groups(netif);
+    if (netif->flags & NETIF_FLAG_MLD6) {
+      /* send mld memberships */
+      mld6_report_groups(netif);
+    }
 #endif /* LWIP_IPV6_MLD */
   }
 #endif /* LWIP_IPV6 */

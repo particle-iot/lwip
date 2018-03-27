@@ -2450,8 +2450,10 @@ void
 nd6_restart_netif(struct netif *netif)
 {
 #if LWIP_IPV6_SEND_ROUTER_SOLICIT
-  /* Send Router Solicitation messages (see RFC 4861, ch. 6.3.7). */
-  netif->rs_count = LWIP_ND6_MAX_MULTICAST_SOLICIT;
+  if (!(netif->flags & NETIF_FLAG_NO_ND6)) {
+    /* Send Router Solicitation messages (see RFC 4861, ch. 6.3.7). */
+    netif->rs_count = LWIP_ND6_MAX_MULTICAST_SOLICIT;
+  }
 #endif /* LWIP_IPV6_SEND_ROUTER_SOLICIT */
 }
 

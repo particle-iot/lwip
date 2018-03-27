@@ -105,7 +105,9 @@ extern "C" {
 /** If set, the netif has MLD6 capability.
  * Set by the netif driver in its init function. */
 #define NETIF_FLAG_MLD6         0x40U
-
+/** If set, the netif has no ND6 capability.
+ * Set by the netif driver in its init function. */
+#define NETIF_FLAG_NO_ND6       0x80U
 /**
  * @}
  */
