@@ -83,6 +83,12 @@ void ip6_debug_print(struct pbuf *p);
 #define ip6_debug_print(p)
 #endif /* IP6_DEBUG */
 
+enum lwip_ip6_forward_flags {
+  LWIP_IP6_FORWARD_FLAG_NONE                   = 0,
+  LWIP_IP6_FORWARD_FLAG_NO_ICMP_REPLY          = 0x01,
+  LWIP_IP6_FORWARD_FLAG_NO_HOP_LIMIT_DECREMENT = 0x02,
+  LWIP_IP6_FORWARD_FLAG_FORCE_ROUTE            = 0x04
+};
 
 #ifdef __cplusplus
 }
