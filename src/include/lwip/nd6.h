@@ -75,6 +75,10 @@ void nd6_cleanup_netif(struct netif *netif);
 void nd6_adjust_mld_membership(struct netif *netif, s8_t addr_idx, u8_t new_state);
 #endif /* LWIP_IPV6_MLD */
 
+s8_t nd6_find_neighbor_cache_entry(const ip6_addr_t *ip6addr);
+s8_t nd6_new_neighbor_cache_entry(void);
+void nd6_free_neighbor_cache_entry(s8_t i);
+
 #ifdef __cplusplus
 }
 #endif
