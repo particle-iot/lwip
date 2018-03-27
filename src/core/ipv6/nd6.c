@@ -389,24 +389,30 @@ nd6_input(struct pbuf *p, struct netif *inp)
           (neighbor_cache[i].state == ND6_INCOMPLETE)) {
         /* Check that link-layer address option also fits in packet. */
         if (p->len < (sizeof(struct na_header) + 2)) {
-          /* @todo debug message */
-          pbuf_free(p);
-          ND6_STATS_INC(nd6.lenerr);
-          ND6_STATS_INC(nd6.drop);
-          return;
+          /* there is no link layer address on p2p links for example */
+          if (inp->hwaddr_len > 0) {
+            /* @todo debug message */
+            pbuf_free(p);
+            ND6_STATS_INC(nd6.lenerr);
+            ND6_STATS_INC(nd6.drop);
+            return;
+          }
+          lladdr_opt = NULL;
+        } else {
+          lladdr_opt = (struct lladdr_option *)((u8_t*)p->payload + sizeof(struct na_header));
         }
 
-        lladdr_opt = (struct lladdr_option *)((u8_t*)p->payload + sizeof(struct na_header));
+        if (lladdr_opt != NULL) {
+          if (p->len < (sizeof(struct na_header) + (lladdr_opt->length << 3))) {
+            /* @todo debug message */
+            pbuf_free(p);
+            ND6_STATS_INC(nd6.lenerr);
+            ND6_STATS_INC(nd6.drop);
+            return;
+          }
 
-        if (p->len < (sizeof(struct na_header) + (lladdr_opt->length << 3))) {
-          /* @todo debug message */
-          pbuf_free(p);
-          ND6_STATS_INC(nd6.lenerr);
-          ND6_STATS_INC(nd6.drop);
-          return;
+          MEMCPY(neighbor_cache[i].lladdr, lladdr_opt->addr, inp->hwaddr_len);
         }
-
-        MEMCPY(neighbor_cache[i].lladdr, lladdr_opt->addr, inp->hwaddr_len);
       }
 
       neighbor_cache[i].netif = inp;
@@ -501,7 +507,8 @@ nd6_input(struct pbuf *p, struct netif *inp)
     } else {
       /* Sender is trying to resolve our address. */
       /* Verify that they included their own link-layer address. */
-      if (lladdr_opt == NULL) {
+      /* there is no link layer address on p2p links for example */
+      if (lladdr_opt == NULL && inp->hwaddr_len > 0) {
         /* Not a valid message. */
         pbuf_free(p);
         ND6_STATS_INC(nd6.proterr);
@@ -514,7 +521,9 @@ nd6_input(struct pbuf *p, struct netif *inp)
         /* We already have a record for the solicitor. */
         if (neighbor_cache[i].state == ND6_INCOMPLETE) {
           neighbor_cache[i].netif = inp;
-          MEMCPY(neighbor_cache[i].lladdr, lladdr_opt->addr, inp->hwaddr_len);
+          if (lladdr_opt != NULL) {
+            MEMCPY(neighbor_cache[i].lladdr, lladdr_opt->addr, inp->hwaddr_len);
+          }
 
           /* Delay probe in case we get confirmation of reachability from upper layer (TCP). */
           neighbor_cache[i].state = ND6_DELAY;
@@ -533,7 +542,9 @@ nd6_input(struct pbuf *p, struct netif *inp)
           return;
         }
         neighbor_cache[i].netif = inp;
-        MEMCPY(neighbor_cache[i].lladdr, lladdr_opt->addr, inp->hwaddr_len);
+        if (lladdr_opt != NULL) {
+          MEMCPY(neighbor_cache[i].lladdr, lladdr_opt->addr, inp->hwaddr_len);
+        }
         ip6_addr_set(&(neighbor_cache[i].next_hop_address), ip6_current_src_addr());
 
         /* Receiving a message does not prove reachability: only in one direction.
@@ -1175,7 +1186,12 @@ nd6_send_ns(struct netif *netif, const ip6_addr_t *target_addr, u8_t flags)
     /* Use link-local address as source address. */
     src_addr = netif_ip6_addr(netif, 0);
     /* calculate option length (in 8-byte-blocks) */
-    lladdr_opt_len = ((netif->hwaddr_len + 2) + 7) >> 3;
+    if (netif->hwaddr_len > 0) {
+      lladdr_opt_len = ((netif->hwaddr_len + 2) + 7) >> 3;
+    } else {
+      /* there is no link layer address on p2p links for example */
+      lladdr_opt_len = 0;
+    }
   } else {
     src_addr = IP6_ADDR_ANY6;
     /* Option "MUST NOT be included when the source IP address is the unspecified address." */
@@ -1251,7 +1267,12 @@ nd6_send_na(struct netif *netif, const ip6_addr_t *target_addr, u8_t flags)
   src_addr = target_addr;
 
   /* Allocate a packet. */
-  lladdr_opt_len = ((netif->hwaddr_len + 2) >> 3) + (((netif->hwaddr_len + 2) & 0x07) ? 1 : 0);
+  if (netif->hwaddr_len > 0) {
+    lladdr_opt_len = ((netif->hwaddr_len + 2) >> 3) + (((netif->hwaddr_len + 2) & 0x07) ? 1 : 0);
+  } else {
+    /* there is no link layer address on p2p links for example */
+    lladdr_opt_len = 0;
+  }
   p = pbuf_alloc(PBUF_IP, sizeof(struct na_header) + (lladdr_opt_len << 3), PBUF_RAM);
   if (p == NULL) {
     ND6_STATS_INC(nd6.memerr);
@@ -1260,7 +1281,6 @@ nd6_send_na(struct netif *netif, const ip6_addr_t *target_addr, u8_t flags)
 
   /* Set fields. */
   na_hdr = (struct na_header *)p->payload;
-  lladdr_opt = (struct lladdr_option *)((u8_t*)p->payload + sizeof(struct na_header));
 
   na_hdr->type = ICMP6_TYPE_NA;
   na_hdr->code = 0;
@@ -1271,9 +1291,12 @@ nd6_send_na(struct netif *netif, const ip6_addr_t *target_addr, u8_t flags)
   na_hdr->reserved[2] = 0;
   ip6_addr_copy_to_packed(na_hdr->target_address, *target_addr);
 
-  lladdr_opt->type = ND6_OPTION_TYPE_TARGET_LLADDR;
-  lladdr_opt->length = (u8_t)lladdr_opt_len;
-  SMEMCPY(lladdr_opt->addr, netif->hwaddr, netif->hwaddr_len);
+  if (lladdr_opt_len > 0) {
+    lladdr_opt = (struct lladdr_option *)((u8_t*)p->payload + sizeof(struct na_header));
+    lladdr_opt->type = ND6_OPTION_TYPE_TARGET_LLADDR;
+    lladdr_opt->length = (u8_t)lladdr_opt_len;
+    SMEMCPY(lladdr_opt->addr, netif->hwaddr, netif->hwaddr_len);
+  }
 
   /* Generate the solicited node address for the target address. */
   if (flags & ND6_SEND_FLAG_MULTICAST_DEST) {
@@ -1330,7 +1353,8 @@ nd6_send_rs(struct netif *netif)
   ip6_addr_assign_zone(&multicast_address, IP6_MULTICAST, netif);
 
   /* Allocate a packet. */
-  if (src_addr != IP6_ADDR_ANY6) {
+  if (src_addr != IP6_ADDR_ANY6 && netif->hwaddr_len > 0) {
+    /* there is no link layer address on p2p links for example */
     lladdr_opt_len = ((netif->hwaddr_len + 2) >> 3) + (((netif->hwaddr_len + 2) & 0x07) ? 1 : 0);
   }
   p = pbuf_alloc(PBUF_IP, sizeof(struct rs_header) + (lladdr_opt_len << 3), PBUF_RAM);
@@ -1347,7 +1371,7 @@ nd6_send_rs(struct netif *netif)
   rs_hdr->chksum = 0;
   rs_hdr->reserved = 0;
 
-  if (src_addr != IP6_ADDR_ANY6) {
+  if (lladdr_opt_len > 0 && src_addr != IP6_ADDR_ANY6) {
     /* Include our hw address. */
     lladdr_opt = (struct lladdr_option *)((u8_t*)p->payload + sizeof(struct rs_header));
     lladdr_opt->type = ND6_OPTION_TYPE_SOURCE_LLADDR;
