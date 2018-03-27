@@ -104,9 +104,9 @@ union ra_options {
 static union ra_options nd6_ra_buffer;
 
 /* Forward declarations. */
-static s8_t nd6_find_neighbor_cache_entry(const ip6_addr_t *ip6addr);
-static s8_t nd6_new_neighbor_cache_entry(void);
-static void nd6_free_neighbor_cache_entry(s8_t i);
+// static s8_t nd6_find_neighbor_cache_entry(const ip6_addr_t *ip6addr);
+// static s8_t nd6_new_neighbor_cache_entry(void);
+// static void nd6_free_neighbor_cache_entry(s8_t i);
 static s16_t nd6_find_destination_cache_entry(const ip6_addr_t *ip6addr);
 static s16_t nd6_new_destination_cache_entry(void);
 static int nd6_is_prefix_in_netif(const ip6_addr_t *ip6addr, struct netif *netif);
@@ -1421,7 +1421,7 @@ nd6_send_rs(struct netif *netif)
  * @return The neighbor cache entry index that matched, -1 if no
  * entry is found
  */
-static s8_t
+s8_t
 nd6_find_neighbor_cache_entry(const ip6_addr_t *ip6addr)
 {
   s8_t i;
@@ -1442,7 +1442,7 @@ nd6_find_neighbor_cache_entry(const ip6_addr_t *ip6addr)
  * @return The neighbor cache entry index that was created, -1 if no
  * entry could be created
  */
-static s8_t
+s8_t
 nd6_new_neighbor_cache_entry(void)
 {
   s8_t i;
@@ -1549,7 +1549,7 @@ nd6_new_neighbor_cache_entry(void)
  *
  * @param i the neighbor cache entry index to free
  */
-static void
+void
 nd6_free_neighbor_cache_entry(s8_t i)
 {
   if ((i < 0) || (i >= LWIP_ND6_NUM_NEIGHBORS)) {
