@@ -41,7 +41,7 @@
  */
 
 #include "netif/ppp/ppp_opts.h"
-#if PPP_SUPPORT && PPP_IPV4_SUPPORT /* don't build if not configured for use in lwipopts.h */
+#if PPP_SUPPORT && PPP_IPV4_SUPPORT && !PPP_IPCP_OVERRIDE /* don't build if not configured for use in lwipopts.h */
 
 /*
  * @todo:
