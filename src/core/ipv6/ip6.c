@@ -722,7 +722,7 @@ netif_found:
       /* try to forward IP packet on (other) interfaces */
       ip6_forward(p, ip6hdr, inp);
     } else {
-#if LWIP_HOOK_IP6_ROUTE_MULTICAST
+#ifdef LWIP_HOOK_IP6_ROUTE_MULTICAST
       LWIP_HOOK_IP6_ROUTE_MULTICAST(p, ip6hdr, inp);
 #endif /* LWIP_HOOK_IP6_ROUTE_MULTICAST */
     }
