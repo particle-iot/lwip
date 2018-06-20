@@ -46,6 +46,7 @@
 
 #include "lwip/ip_addr.h"
 #include "lwip/def.h"
+#include <sys/param.h>
 
 /* used by IP6_ADDR_ANY(6) in ip6_addr.h */
 const ip_addr_t ip6_addr_any = IPADDR6_INIT(0ul, 0ul, 0ul, 0ul);
@@ -279,6 +280,42 @@ ip6addr_ntoa_r(const ip6_addr_t *addr, char *buf, int buflen)
   buf[i] = 0;
 
   return buf;
+}
+
+u8_t ip6_addr_common_prefix_length(const ip6_addr_t* addr1, const ip6_addr_t* addr2, u8_t addr1_prefix)
+{
+  if (addr1_prefix > 128) {
+    return 0;
+  }
+
+  const u8_t full_bytes = addr1_prefix / 8;
+  const u8_t full_words = full_bytes / sizeof(u32_t);
+  u8_t remainder_bits = addr1_prefix - full_words * sizeof(u32_t) * 8;
+  u8_t result = 0;
+
+  for (u8_t i = 0; i < full_words; i++) {
+    const u32_t m = addr1->addr[i] ^ addr2->addr[i];
+    if (m != 0) {
+      result += __builtin_ctz(m);
+      remainder_bits = 0;
+      break;
+    } else {
+      /* __builtin_ctz result is undefined if x is 0 */
+      result += sizeof(u32_t) * 8;
+    }
+  }
+
+  if (remainder_bits > 0) {
+    const u32_t mask = PP_HTONL(((1 << remainder_bits) - 1) << (sizeof(u32_t) * 8 - remainder_bits));
+    const u32_t m = (addr1->addr[full_words + 1] ^ addr1->addr[full_words + 1]) & mask;
+    if (m != 0) {
+      result += MIN(__builtin_ctz(m), remainder_bits);
+    } else {
+      result += remainder_bits;
+    }
+  }
+
+  return result;
 }
 
 #endif /* LWIP_IPV6 */
