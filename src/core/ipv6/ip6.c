@@ -321,7 +321,11 @@ ip6_select_source_address(struct netif *netif, const ip6_addr_t *dest)
     } else if (ip6_addr_islinklocal(cand_addr)) {
       cand_scope = IP6_MULTICAST_SCOPE_LINK_LOCAL;
     } else if (ip6_addr_isuniquelocal(cand_addr)) {
-      cand_scope = IP6_MULTICAST_SCOPE_ORGANIZATION_LOCAL;
+      if (!ip6_addr_has_zone(cand_addr)) {
+        cand_scope = IP6_MULTICAST_SCOPE_ORGANIZATION_LOCAL;
+      } else {
+        cand_scope = IP6_MULTICAST_SCOPE_REALM_LOCAL;
+      }
     } else if (ip6_addr_issitelocal(cand_addr)) {
       cand_scope = IP6_MULTICAST_SCOPE_SITE_LOCAL;
     } else {
@@ -332,8 +336,8 @@ ip6_select_source_address(struct netif *netif, const ip6_addr_t *dest)
     /* @todo compute the actual common bits, for longest matching prefix. */
     /* We cannot count on the destination address having a proper zone
      * assignment, so do not compare zones in this case. */
-    cand_bits = ip6_addr_netcmp_zoneless(cand_addr, dest); /* just 1 or 0 for now */
-    if (cand_bits && ip6_addr_nethostcmp(cand_addr, dest)) {
+    cand_bits = ip6_addr_common_prefix_length_default(cand_addr, dest); /* just 1 or 0 for now */
+    if (ip6_addr_netcmp_zoneless(cand_addr, dest) && ip6_addr_nethostcmp(cand_addr, dest)) {
       return netif_ip_addr6(netif, i); /* Rule 1 */
     }
     if ((best_addr == NULL) || /* no alternative yet */
