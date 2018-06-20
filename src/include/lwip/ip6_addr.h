@@ -219,7 +219,7 @@ typedef struct ip6_addr ip6_addr_t;
 #define IP6_MULTICAST_SCOPE_RESERVED0           0x0
 #define IP6_MULTICAST_SCOPE_INTERFACE_LOCAL     0x1
 #define IP6_MULTICAST_SCOPE_LINK_LOCAL          0x2
-#define IP6_MULTICAST_SCOPE_RESERVED3           0x3
+#define IP6_MULTICAST_SCOPE_REALM_LOCAL         0x3
 #define IP6_MULTICAST_SCOPE_ADMIN_LOCAL         0x4
 #define IP6_MULTICAST_SCOPE_SITE_LOCAL          0x5
 #define IP6_MULTICAST_SCOPE_ORGANIZATION_LOCAL  0x8
@@ -341,7 +341,9 @@ int ip6addr_aton(const char *cp, ip6_addr_t *addr);
 char *ip6addr_ntoa(const ip6_addr_t *addr);
 char *ip6addr_ntoa_r(const ip6_addr_t *addr, char *buf, int buflen);
 
+#define ip6_addr_common_prefix_length_default(addr1, addr2) ip6_addr_common_prefix_length(addr1, addr2, 64)
 
+u8_t ip6_addr_common_prefix_length(const ip6_addr_t* addr1, const ip6_addr_t* addr2, u8_t addr1_prefix);
 
 #ifdef __cplusplus
 }
