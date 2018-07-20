@@ -683,6 +683,13 @@ ip4_input(struct pbuf *p, struct netif *inp)
   ip_data.current_ip4_header = iphdr;
   ip_data.current_ip_header_tot_len = IPH_HL_BYTES(iphdr);
 
+#ifdef LWIP_HOOK_IP4_INPUT_PRE_UPPER_LAYERS
+  if (LWIP_HOOK_IP4_INPUT_PRE_UPPER_LAYERS(p, iphdr, inp)) {
+    /* the packet has been eaten */
+    return ERR_OK;
+  }
+#endif /* LWIP_HOOK_IP4_INPUT_PRE_UPPER_LAYERS */
+
 #if LWIP_RAW
   /* raw input did not eat the packet? */
   raw_status = raw_input(p, inp);

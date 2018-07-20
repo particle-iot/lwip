@@ -52,11 +52,13 @@
 extern "C" {
 #endif
 
+#ifndef LWIP_IPV4_SRC_ROUTING
 #ifdef LWIP_HOOK_IP4_ROUTE_SRC
 #define LWIP_IPV4_SRC_ROUTING   1
 #else
 #define LWIP_IPV4_SRC_ROUTING   0
 #endif
+#endif /* LWIP_IPV4_SRC_ROUTING */
 
 /** Currently, the function ip_output_if_opt() is only used with IGMP */
 #define IP_OPTIONS_SEND   (LWIP_IPV4 && LWIP_IGMP)
