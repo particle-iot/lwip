@@ -307,6 +307,15 @@ const ip_addr_t dns_mquery_v4group = DNS_MQUERY_IPV4_GROUP_INIT;
 const ip_addr_t dns_mquery_v6group = DNS_MQUERY_IPV6_GROUP_INIT;
 #endif /* LWIP_IPV6 */
 
+static u8_t next_server_index(u8_t start_index) {
+  for (u8_t i = start_index; i < DNS_MAX_SERVERS; ++i) {
+    if (!ip_addr_isany_val(dns_servers[i])) {
+      return i;
+    }
+  }
+  return DNS_MAX_SERVERS;
+}
+
 /**
  * Initialize the resolver: set up the UDP pcb and configure the default server
  * (if DNS_SERVER_ADDRESS is set).
@@ -1021,7 +1030,7 @@ dns_backupserver_available(struct dns_table_entry *pentry)
   u8_t ret = 0;
 
   if (pentry) {
-    if ((pentry->server_idx + 1 < DNS_MAX_SERVERS) && !ip_addr_isany_val(dns_servers[pentry->server_idx + 1])) {
+    if (next_server_index(pentry->server_idx + 1) != DNS_MAX_SERVERS) {
       ret = 1;
     }
   }
@@ -1051,7 +1060,7 @@ dns_check_entry(u8_t i)
       /* initialize new entry */
       entry->txid = dns_create_txid();
       entry->state = DNS_STATE_ASKING;
-      entry->server_idx = 0;
+      entry->server_idx = next_server_index(0);
       entry->tmr = 1;
       entry->retries = 0;
 
@@ -1071,7 +1080,7 @@ dns_check_entry(u8_t i)
 #endif /* LWIP_DNS_SUPPORT_MDNS_QUERIES */
              ) {
             /* change of server */
-            entry->server_idx++;
+            entry->server_idx = next_server_index(entry->server_idx + 1);
             entry->tmr = 1;
             entry->retries = 0;
           } else {
@@ -1613,7 +1622,7 @@ dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *addr, dns_found_call
 #endif /* LWIP_DNS_SUPPORT_MDNS_QUERIES */
   {
     /* prevent calling found callback if no server is set, return error instead */
-    if (ip_addr_isany_val(dns_servers[0])) {
+    if (next_server_index(0) == DNS_MAX_SERVERS) {
       return ERR_VAL;
     }
   }
