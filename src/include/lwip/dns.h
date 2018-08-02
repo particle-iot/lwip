@@ -122,6 +122,20 @@ err_t          dns_local_addhost(const char *hostname, const ip_addr_t *addr);
 #endif /* DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
 #endif /* DNS_LOCAL_HOSTLIST */
 
+typedef void (*dns_list_change_callback_fn)(u8_t numdns, const ip_addr_t *dnsserver);
+
+struct dns_list_change_callback;
+typedef struct dns_list_change_callback
+{
+  dns_list_change_callback_fn callback_fn;
+  struct dns_list_change_callback* next;
+} dns_list_change_callback_t;
+
+#define DNS_DECLARE_LIST_CHANGE_CALLBACK(name) static dns_list_change_callback_t name;
+
+err_t          dns_add_list_change_callback(dns_list_change_callback_t* callback, dns_list_change_callback_fn fn);
+err_t          dns_remove_list_change_callback(dns_list_change_callback_t* callback);
+
 #ifdef __cplusplus
 }
 #endif

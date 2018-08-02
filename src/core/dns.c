@@ -285,6 +285,7 @@ static err_t dns_lookup_local(const char *hostname, ip_addr_t *addr LWIP_DNS_ADD
 static void dns_recv(void *s, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
 static void dns_check_entries(void);
 static void dns_call_found(u8_t idx, ip_addr_t *addr);
+static err_t dns_invoke_list_change_callback(u8_t index, const ip_addr_t *dnsserver);
 
 /*-----------------------------------------------------------------------------
  * Globals
@@ -306,6 +307,8 @@ const ip_addr_t dns_mquery_v4group = DNS_MQUERY_IPV4_GROUP_INIT;
 #if LWIP_IPV6
 const ip_addr_t dns_mquery_v6group = DNS_MQUERY_IPV6_GROUP_INIT;
 #endif /* LWIP_IPV6 */
+
+dns_list_change_callback_t* dns_callbacks = NULL;
 
 static u8_t next_server_index(u8_t start_index) {
   for (u8_t i = start_index; i < DNS_MAX_SERVERS; ++i) {
@@ -372,8 +375,10 @@ dns_setserver(u8_t numdns, const ip_addr_t *dnsserver)
   if (numdns < DNS_MAX_SERVERS) {
     if (dnsserver != NULL) {
       dns_servers[numdns] = (*dnsserver);
+      dns_invoke_list_change_callback(numdns, &dns_servers[numdns]);
     } else {
       dns_servers[numdns] = *IP_ADDR_ANY;
+      dns_invoke_list_change_callback(numdns, &dns_servers[numdns]);
     }
   }
 }
@@ -1630,6 +1635,61 @@ dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *addr, dns_found_call
   /* queue query with specified callback */
   return dns_enqueue(hostname, hostnamelen, found, callback_arg LWIP_DNS_ADDRTYPE_ARG(dns_addrtype)
                      LWIP_DNS_ISMDNS_ARG(is_mdns));
+}
+
+err_t
+dns_add_list_change_callback(dns_list_change_callback_t* callback, dns_list_change_callback_fn fn)
+{
+  LWIP_ASSERT_CORE_LOCKED();
+  LWIP_ASSERT("callback must be != NULL", callback != NULL);
+  LWIP_ASSERT("fn must be != NULL", fn != NULL);
+
+  callback->callback_fn = fn;
+  callback->next        = dns_callbacks;
+  dns_callbacks         = callback;
+  return ERR_OK;
+}
+
+err_t
+dns_remove_list_change_callback(dns_list_change_callback_t* callback)
+{
+  dns_list_change_callback_t *last, *iter;
+
+  LWIP_ASSERT_CORE_LOCKED();
+  LWIP_ASSERT("callback must be != NULL", callback != NULL);
+
+  if (dns_callbacks == NULL) {
+    return ERR_OK;
+  }
+
+  if (callback == dns_callbacks) {
+    dns_callbacks = dns_callbacks->next;
+  } else {
+    last = dns_callbacks;
+    for (iter = dns_callbacks->next; iter != NULL; last = iter, iter = iter->next) {
+      if (iter == callback) {
+        LWIP_ASSERT("last != NULL", last != NULL);
+        last->next = callback->next;
+        callback->next = NULL;
+        break;
+      }
+    }
+  }
+
+  return ERR_OK;
+}
+
+err_t
+dns_invoke_list_change_callback(u8_t index, const ip_addr_t *dnsserver)
+{
+  dns_list_change_callback_t *callback = dns_callbacks;
+
+  while (callback != NULL) {
+    callback->callback_fn(index, dnsserver);
+    callback = callback->next;
+  }
+
+  return ERR_OK;
 }
 
 #endif /* LWIP_DNS */
