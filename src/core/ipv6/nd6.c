@@ -773,7 +773,7 @@ nd6_input(struct pbuf *p, struct netif *inp)
             IP_SET_TYPE_VAL(rdnss_address, IPADDR_TYPE_V6);
             ip6_addr_assign_zone(ip_2_ip6(&rdnss_address), IP6_UNKNOWN, inp);
 
-            if (htonl(rdnss_opt->lifetime) > 0) {
+            if (lwip_htonl(rdnss_opt->lifetime) > 0) {
               /* TODO implement Lifetime > 0 */
               dns_setserver(rdnss_server_idx++, &rdnss_address);
             } else {
