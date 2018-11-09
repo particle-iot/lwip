@@ -289,6 +289,12 @@ nd6_input(struct pbuf *p, struct netif *inp)
 
   ND6_STATS_INC(nd6.recv);
 
+  if (inp->flags & NETIF_FLAG_NO_ND6) {
+    /* ND6 is disabled, ignore packet */
+    pbuf_free(p);
+    return;
+  }
+
   msg_type = *((u8_t *)p->payload);
   switch (msg_type) {
   case ICMP6_TYPE_NA: /* Neighbor Advertisement. */
