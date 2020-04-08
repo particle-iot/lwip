@@ -66,6 +66,13 @@
 #endif
 
 /**
+ * PPPOS_PBUF_RAM_TX_BUFFER==1: Use PBUF_RAM TX buffer
+ */
+#ifndef PPPOS_PBUF_RAM_TX_BUFFER
+#define PPPOS_PBUF_RAM_TX_BUFFER        0
+#endif // PPPOS_PBUF_RAM_TX_BUFFER
+
+/**
  * LWIP_PPP_API==1: Enable PPP API (in pppapi.c)
  */
 #ifndef LWIP_PPP_API
