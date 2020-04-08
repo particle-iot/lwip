@@ -3049,6 +3049,17 @@
 #endif
 
 /**
+ * LWIP_HOOK_MEMP_FREE(memp_t_type):
+ * Called from memp_free() when memp_free is called
+ * Signature:\code{.c}
+ *   void my_hook(memp_t type, unsigned avail, unsigned size);
+ * \endcode
+ */
+#ifdef __DOXYGEN__
+#define LWIP_HOOK_MEMP_FREE(memp_t_type, avail, size)
+#endif
+
+/**
  * LWIP_HOOK_UNKNOWN_ETH_PROTOCOL(pbuf, netif):
  * Called from ethernet_input() when an unknown eth type is encountered.
  * Signature:\code{.c}
