@@ -705,7 +705,8 @@ pppos_input(ppp_pcb *ppp, u8_t *s, int l)
               /* No free buffers.  Drop the input packet and let the
                * higher layers deal with it.  Continue processing
                * the received pbuf chain in case a new packet starts. */
-              PPPDEBUG(LOG_ERR, ("pppos_input[%d]: NO FREE PBUFS!\n", ppp->netif->num));
+              /* Particle: This is a really annoying log message, ignore it */
+              // PPPDEBUG(LOG_ERR, ("pppos_input[%d]: NO FREE PBUFS!\n", ppp->netif->num));
               LINK_STATS_INC(link.memerr);
               pppos_input_drop(pppos);
               pppos->in_state = PDSTART;  /* Wait for flag sequence. */
