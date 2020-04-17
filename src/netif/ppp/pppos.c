@@ -210,7 +210,14 @@ pppos_write(ppp_pcb *ppp, void *ctx, struct pbuf *p)
   /* Grab an output buffer. Using PBUF_POOL here for tx is ok since the pbuf
      gets freed by 'pppos_output_last' before this function returns and thus
      cannot starve rx. */
+#if !PPPOS_PBUF_RAM_TX_BUFFER
   nb = pbuf_alloc(PBUF_RAW, 0, PBUF_POOL);
+#else
+  if (!pppos->tx_pbuf) {
+    pppos->tx_pbuf = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_RAM);
+  }
+  nb = pppos->tx_pbuf;
+#endif // !PPPOS_PBUF_RAM_TX_BUFFER
   if (nb == NULL) {
     PPPDEBUG(LOG_WARNING, ("pppos_write[%d]: alloc fail\n", ppp->netif->num));
     LINK_STATS_INC(link.memerr);
@@ -222,6 +229,10 @@ pppos_write(ppp_pcb *ppp, void *ctx, struct pbuf *p)
 
   /* Set nb->tot_len to actual payload length */
   nb->tot_len = p->len;
+
+#if PPPOS_PBUF_RAM_TX_BUFFER
+  nb->len = 0;
+#endif // PPPOS_PBUF_RAM_TX_BUFFER
 
   /* If the link has been idle, we'll send a fresh flag character to
    * flush any noise. */
@@ -261,7 +272,14 @@ pppos_netif_output(ppp_pcb *ppp, void *ctx, struct pbuf *pb, u16_t protocol)
   /* Grab an output buffer. Using PBUF_POOL here for tx is ok since the pbuf
      gets freed by 'pppos_output_last' before this function returns and thus
      cannot starve rx. */
+#if !PPPOS_PBUF_RAM_TX_BUFFER
   nb = pbuf_alloc(PBUF_RAW, 0, PBUF_POOL);
+#else
+  if (!pppos->tx_pbuf) {
+    pppos->tx_pbuf = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_RAM);
+  }
+  nb = pppos->tx_pbuf;
+#endif // !PPPOS_PBUF_RAM_TX_BUFFER
   if (nb == NULL) {
     PPPDEBUG(LOG_WARNING, ("pppos_netif_output[%d]: alloc fail\n", ppp->netif->num));
     LINK_STATS_INC(link.memerr);
@@ -272,6 +290,10 @@ pppos_netif_output(ppp_pcb *ppp, void *ctx, struct pbuf *pb, u16_t protocol)
 
   /* Set nb->tot_len to actual payload length */
   nb->tot_len = pb->tot_len;
+
+#if PPPOS_PBUF_RAM_TX_BUFFER
+  nb->len = 0;
+#endif // PPPOS_PBUF_RAM_TX_BUFFER
 
   /* If the link has been idle, we'll send a fresh flag character to
    * flush any noise. */
@@ -405,6 +427,12 @@ pppos_destroy(ppp_pcb *ppp, void *ctx)
   /* input pbuf left ? */
   pppos_input_free_current_packet(pppos);
 #endif /* PPP_INPROC_IRQ_SAFE */
+
+#if PPPOS_PBUF_RAM_TX_BUFFER
+  if (pppos->tx_pbuf) {
+    pbuf_free(pppos->tx_pbuf);
+  }
+#endif // PPPOS_PBUF_RAM_TX_BUFFER
 
   LWIP_MEMPOOL_FREE(PPPOS_PCB, pppos);
   return ERR_OK;
@@ -677,7 +705,8 @@ pppos_input(ppp_pcb *ppp, u8_t *s, int l)
               /* No free buffers.  Drop the input packet and let the
                * higher layers deal with it.  Continue processing
                * the received pbuf chain in case a new packet starts. */
-              PPPDEBUG(LOG_ERR, ("pppos_input[%d]: NO FREE PBUFS!\n", ppp->netif->num));
+              /* Particle: This is a really annoying log message, ignore it */
+              // PPPDEBUG(LOG_ERR, ("pppos_input[%d]: NO FREE PBUFS!\n", ppp->netif->num));
               LINK_STATS_INC(link.memerr);
               pppos_input_drop(pppos);
               pppos->in_state = PDSTART;  /* Wait for flag sequence. */
@@ -880,7 +909,9 @@ pppos_output_last(pppos_pcb *pppos, err_t err, struct pbuf *nb, u16_t *fcs)
   MIB2_STATS_NETIF_ADD(ppp->netif, ifoutoctets, nb->tot_len);
   MIB2_STATS_NETIF_INC(ppp->netif, ifoutucastpkts);
   LINK_STATS_INC(link.xmit);
+#if !PPPOS_PBUF_RAM_TX_BUFFER
   pbuf_free(nb);
+#endif // !PPPOS_PBUF_RAM_TX_BUFFER
   return ERR_OK;
 
 failed:
@@ -888,7 +919,9 @@ failed:
   LINK_STATS_INC(link.err);
   LINK_STATS_INC(link.drop);
   MIB2_STATS_NETIF_INC(ppp->netif, ifoutdiscards);
+#if !PPPOS_PBUF_RAM_TX_BUFFER
   pbuf_free(nb);
+#endif // !PPPOS_PBUF_RAM_TX_BUFFER
   return err;
 }
 

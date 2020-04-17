@@ -444,4 +444,7 @@ memp_free(memp_t type, void *mem)
     LWIP_HOOK_MEMP_AVAILABLE(type);
   }
 #endif
+#ifdef LWIP_HOOK_MEMP_FREE
+  LWIP_HOOK_MEMP_FREE(type, memp_pools[type]->stats->avail - memp_pools[type]->stats->used, memp_pools[type]->stats->avail);
+#endif // LWIP_HOOK_MEMP_FREE
 }

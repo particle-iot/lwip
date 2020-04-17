@@ -95,6 +95,9 @@ struct pppos_pcb_s {
   u16_t in_fcs;                    /* Input Frame Check Sequence value. */
   u8_t in_state;                   /* The input process state. */
   u8_t in_escaped;                 /* Escape next character. */
+#if PPPOS_PBUF_RAM_TX_BUFFER
+  struct pbuf* tx_pbuf;
+#endif // PPPOS_PBUF_RAM_TX_BUFFER
 };
 
 /* Create a new PPPoS session. */
