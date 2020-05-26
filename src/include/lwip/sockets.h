@@ -430,6 +430,10 @@ typedef struct ipv6_mreq {
 #define SIOCATMARK  _IOR('s',  7, unsigned long)  /* at oob mark? */
 #endif
 
+#ifndef SIOCSPGRP
+#define SIOCSPGRP	_IOW('s', 8, void*)
+#endif // SIOCSPGRP
+
 /* commands for fnctl */
 #ifndef F_GETFL
 #define F_GETFL 3

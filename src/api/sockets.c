@@ -563,6 +563,10 @@ free_socket_locked(struct lwip_sock *sock, int is_tcp, struct netconn **conn,
   sock->lastdata.pbuf = NULL;
   *conn = sock->conn;
   sock->conn = NULL;
+
+#if LWIP_SOCKET_NOTIFY_THREAD
+  sock->notify = NULL;
+#endif /* LWIP_SOCKET_NOTIFY_THREAD */
   return 1;
 }
 
@@ -2478,6 +2482,9 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
 {
   int s, check_waiters;
   struct lwip_sock *sock;
+#if LWIP_SOCKET_NOTIFY_THREAD
+  void* notify = NULL;
+#endif /* LWIP_SOCKET_NOTIFY_THREAD */
   SYS_ARCH_DECL_PROTECT(lev);
 
   LWIP_UNUSED_ARG(len);
@@ -2522,6 +2529,9 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
       if (sock->rcvevent > 1) {
         check_waiters = 0;
       }
+#if LWIP_SOCKET_NOTIFY_THREAD
+      notify = sock->notify;
+#endif /* LWIP_SOCKET_NOTIFY_THREAD */
       break;
     case NETCONN_EVT_RCVMINUS:
       sock->rcvevent--;
@@ -2557,6 +2567,11 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
   } else {
     SYS_ARCH_UNPROTECT(lev);
   }
+#if LWIP_SOCKET_NOTIFY_THREAD
+  if (notify) {
+    sys_arch_thread_notify(notify);
+  }
+#endif /* LWIP_SOCKET_NOTIFY_THREAD */
   done_socket(sock);
 }
 
@@ -3747,6 +3762,9 @@ lwip_ioctl(int s, long cmd, void *argp)
 #if LWIP_SO_RCVBUF
   int recv_avail;
 #endif /* LWIP_SO_RCVBUF */
+#if LWIP_SOCKET_NOTIFY_THREAD
+  SYS_ARCH_DECL_PROTECT(lev);
+#endif /* LWIP_SOCKET_NOTIFY_THREAD */
 
   if (!sock) {
     return -1;
@@ -3817,7 +3835,17 @@ lwip_ioctl(int s, long cmd, void *argp)
       sock_set_errno(sock, 0);
       done_socket(sock);
       return 0;
-
+#if LWIP_SOCKET_NOTIFY_THREAD
+    case SIOCSPGRP:
+      if (argp) {
+        SYS_ARCH_PROTECT(lev);
+        sock->notify = *((void **)argp);
+        SYS_ARCH_UNPROTECT(lev);
+      }
+      sock_set_errno(sock, 0);
+      done_socket(sock);
+      return 0;
+#endif /* LWIP_SOCKET_NOTIFY_THREAD */
     default:
       break;
   } /* switch (cmd) */

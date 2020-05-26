@@ -89,6 +89,9 @@ struct lwip_sock {
 #define LWIP_SOCK_FD_FREE_TCP  1
 #define LWIP_SOCK_FD_FREE_FREE 2
 #endif
+#if LWIP_SOCKET_NOTIFY_THREAD
+  void* notify;
+#endif /* LWIP_SOCKET_NOTIFY_THREAD */
 };
 
 #ifndef set_errno
