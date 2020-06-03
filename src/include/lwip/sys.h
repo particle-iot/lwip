@@ -419,6 +419,8 @@ void sys_mbox_set_invalid(sys_mbox_t *mbox);
  * @param prio priority of the new thread (may be ignored by ports) */
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio);
 
+void sys_arch_thread_notify(void* thread);
+
 #endif /* NO_SYS */
 
 /**

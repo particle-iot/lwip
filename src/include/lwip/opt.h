@@ -2078,6 +2078,10 @@
 #if !defined LWIP_SOCKET_POLL || defined __DOXYGEN__
 #define LWIP_SOCKET_POLL                1
 #endif
+
+#if !defined LWIP_SOCKET_NOTIFY_THREAD || defined __DOXYGEN__
+#define LWIP_SOCKET_NOTIFY_THREAD       0
+#endif
 /**
  * @}
  */
