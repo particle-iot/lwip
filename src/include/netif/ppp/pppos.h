@@ -75,6 +75,10 @@ struct pppos_pcb_s {
   ppp_pcb *ppp;                    /* PPP PCB */
   pppos_output_cb_fn output_cb;    /* PPP serial output callback */
 
+#if PPPOS_PBUF_RAM_TX_BUFFER
+  struct pbuf* tx_pbuf;
+#endif // PPPOS_PBUF_RAM_TX_BUFFER
+
   /* -- below are data that will be cleared between two sessions
    *
    * last_xmit must be the first member of cleared members, because it is
@@ -95,9 +99,6 @@ struct pppos_pcb_s {
   u16_t in_fcs;                    /* Input Frame Check Sequence value. */
   u8_t in_state;                   /* The input process state. */
   u8_t in_escaped;                 /* Escape next character. */
-#if PPPOS_PBUF_RAM_TX_BUFFER
-  struct pbuf* tx_pbuf;
-#endif // PPPOS_PBUF_RAM_TX_BUFFER
 };
 
 /* Create a new PPPoS session. */
