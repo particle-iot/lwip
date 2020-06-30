@@ -876,7 +876,7 @@ void ppp_input(ppp_pcb *pcb, struct pbuf *pb) {
 
 #if PPP_IPV4_SUPPORT
     case PPP_IP:            /* Internet Protocol */
-      PPPDEBUG(LOG_INFO, ("ppp_input[%d]: ip in pbuf len=%d\n", pcb->netif->num, pb->tot_len));
+      // PPPDEBUG(LOG_INFO, ("ppp_input[%d]: ip in pbuf len=%d\n", pcb->netif->num, pb->tot_len));
       ip4_input(pb, pcb->netif);
       return;
 #endif /* PPP_IPV4_SUPPORT */
@@ -1030,7 +1030,7 @@ int ppp_send_config(ppp_pcb *pcb, int mtu, u32_t accm, int pcomp, int accomp) {
     pcb->link_cb->send_config(pcb, pcb->link_ctx_cb, accm, pcomp, accomp);
   }
 
-  PPPDEBUG(LOG_INFO, ("ppp_send_config[%d]\n", pcb->netif->num) );
+  // PPPDEBUG(LOG_INFO, ("ppp_send_config[%d]\n", pcb->netif->num) );
   return 0;
 }
 
@@ -1045,7 +1045,7 @@ int ppp_recv_config(ppp_pcb *pcb, int mru, u32_t accm, int pcomp, int accomp) {
     pcb->link_cb->recv_config(pcb, pcb->link_ctx_cb, accm, pcomp, accomp);
   }
 
-  PPPDEBUG(LOG_INFO, ("ppp_recv_config[%d]\n", pcb->netif->num));
+  // PPPDEBUG(LOG_INFO, ("ppp_recv_config[%d]\n", pcb->netif->num));
   return 0;
 }
 
