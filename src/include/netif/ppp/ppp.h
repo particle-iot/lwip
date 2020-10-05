@@ -288,12 +288,13 @@ typedef struct ppp_settings_s {
   u8_t  fsm_max_conf_req_transmits;  /* Maximum Configure-Request transmissions */
   u8_t  fsm_max_term_transmits;      /* Maximum Terminate-Request transmissions */
   u8_t  fsm_max_nak_loops;           /* Maximum number of nak loops tolerated */
+  u8_t  fsm_ignore_conf_req_opened;  /* Ignore Configure-Request in opened state if
+                                        not disagreeing with the options */
 
   u8_t  lcp_loopbackfail;     /* Number of times we receive our magic number from the peer
                                  before deciding the link is looped-back. */
   u8_t  lcp_echo_interval;    /* Interval between LCP echo-requests */
   u8_t  lcp_echo_fails;       /* Tolerance to unanswered echo-requests */
-
 } ppp_settings;
 
 #if PPP_SERVER

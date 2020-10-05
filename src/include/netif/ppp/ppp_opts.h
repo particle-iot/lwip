@@ -412,6 +412,14 @@
 #endif
 
 /**
+ * FSM_DEFIGNORECONFREQOPENED: Ignore Configure-Requests in opened state
+ * if not disagreeing. Default off.
+ */
+#ifndef FSM_DEFIGNORECONFREQOPENED
+#define FSM_DEFIGNORECONFREQOPENED      0
+#endif
+
+/**
  * UPAP_DEFTIMEOUT: Timeout (seconds) for retransmitting req
  */
 #ifndef UPAP_DEFTIMEOUT

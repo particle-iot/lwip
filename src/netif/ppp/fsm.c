@@ -385,12 +385,24 @@ void fsm_input(fsm *f, u_char *inpacket, int l) {
     }
 }
 
+static void fsm_rconfreq_down_restart(fsm *f) {
+	if( f->callbacks->down )
+		(*f->callbacks->down)(f);	/* Inform upper layers */
+
+	fsm_sconfreq(f, 0);		/* Send initial Configure-Request */
+	f->state = PPP_FSM_REQSENT;
+}
 
 /*
  * fsm_rconfreq - Receive Configure-Request.
  */
 static void fsm_rconfreq(fsm *f, u_char id, u_char *inp, int len) {
     int code, reject_if_disagree;
+    ppp_pcb *pcb = f->pcb;
+	/* Ignore only if the option is enabled and we've passed the
+	 * authentication stage and it's not LCP that attempts to get renegotiated */
+	int ignore_conf_req_opened = pcb->settings.fsm_ignore_conf_req_opened &&
+			pcb->auth_done && f->protocol != PPP_LCP;
 
     switch( f->state ){
     case PPP_FSM_CLOSED:
@@ -402,11 +414,10 @@ static void fsm_rconfreq(fsm *f, u_char id, u_char *inp, int len) {
 	return;
 
     case PPP_FSM_OPENED:
-	/* Go down and restart negotiation */
-	if( f->callbacks->down )
-	    (*f->callbacks->down)(f);	/* Inform upper layers */
-	fsm_sconfreq(f, 0);		/* Send initial Configure-Request */
-	f->state = PPP_FSM_REQSENT;
+	if (!ignore_conf_req_opened) {
+		/* Go down and restart negotiation */
+		fsm_rconfreq_down_restart(f);
+	}
 	break;
 
     case PPP_FSM_STOPPED:
@@ -425,10 +436,18 @@ static void fsm_rconfreq(fsm *f, u_char id, u_char *inp, int len) {
     if (f->callbacks->reqci){		/* Check CI */
 	reject_if_disagree = (f->nakloops >= f->maxnakloops);
 	code = (*f->callbacks->reqci)(f, inp, &len, reject_if_disagree);
-    } else if (len)
-	code = CONFREJ;			/* Reject all CI */
-    else
-	code = CONFACK;
+	} else if (len) {
+		code = CONFREJ;			/* Reject all CI */
+	} else {
+		code = CONFACK;
+	}
+
+	if (ignore_conf_req_opened && code != CONFACK) {
+		/* Go down and restart negotiation */
+		fsm_rconfreq_down_restart(f);
+	} else {
+		FSMDEBUG(("%s: Non-conflicting Configure-Request in opened state, ACKing", PROTO_NAME(f)));
+	}
 
     /* send the Ack, Nak or Rej to the peer */
     fsm_sdata(f, code, id, inp, len);
