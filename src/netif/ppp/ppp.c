@@ -695,6 +695,7 @@ ppp_pcb *ppp_new(struct netif *pppif, const struct link_callbacks *callbacks, vo
   pcb->settings.fsm_max_conf_req_transmits = FSM_DEFMAXCONFREQS;
   pcb->settings.fsm_max_term_transmits = FSM_DEFMAXTERMREQS;
   pcb->settings.fsm_max_nak_loops = FSM_DEFMAXNAKLOOPS;
+  pcb->settings.fsm_ignore_conf_req_opened = FSM_DEFIGNORECONFREQOPENED;
 
   pcb->netif = pppif;
   MIB2_INIT_NETIF(pppif, snmp_ifType_ppp, 0);
