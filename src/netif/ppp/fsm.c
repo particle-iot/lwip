@@ -402,8 +402,7 @@ static void fsm_rconfreq(fsm *f, u_char id, u_char *inp, int len) {
 	/* Ignore only if the option is enabled and we've passed the
 	 * authentication stage and it's not LCP that attempts to get renegotiated */
 	int ignore_conf_req_opened = (f->state == PPP_FSM_OPENED) &&
-			pcb->settings.fsm_ignore_conf_req_opened &&
-			pcb->auth_done && (f->protocol != PPP_LCP);
+			pcb->settings.fsm_ignore_conf_req_opened;
 
     switch( f->state ){
     case PPP_FSM_CLOSED:
@@ -459,8 +458,14 @@ static void fsm_rconfreq(fsm *f, u_char id, u_char *inp, int len) {
 	    f->state = PPP_FSM_OPENED;
 	    if (f->callbacks->up)
 		(*f->callbacks->up)(f);	/* Inform upper layers */
-	} else
-	    f->state = PPP_FSM_ACKSENT;
+	} else {
+		if (!ignore_conf_req_opened) {
+			f->state = PPP_FSM_ACKSENT;
+		} else {
+			/* Stay in opened state */
+			f->state = PPP_FSM_OPENED;
+		}
+	}
 	f->nakloops = 0;
 
     } else {
