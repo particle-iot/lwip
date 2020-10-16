@@ -401,8 +401,9 @@ static void fsm_rconfreq(fsm *f, u_char id, u_char *inp, int len) {
     ppp_pcb *pcb = f->pcb;
 	/* Ignore only if the option is enabled and we've passed the
 	 * authentication stage and it's not LCP that attempts to get renegotiated */
-	int ignore_conf_req_opened = pcb->settings.fsm_ignore_conf_req_opened &&
-			pcb->auth_done && f->protocol != PPP_LCP;
+	int ignore_conf_req_opened = (f->state == PPP_FSM_OPENED) &&
+			pcb->settings.fsm_ignore_conf_req_opened &&
+			pcb->auth_done && (f->protocol != PPP_LCP);
 
     switch( f->state ){
     case PPP_FSM_CLOSED:
