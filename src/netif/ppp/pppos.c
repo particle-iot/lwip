@@ -165,6 +165,11 @@ ppp_get_fcs(u8_t byte)
 #define PPPOS_UNPROTECT(lev)
 #endif /* PPP_INPROC_IRQ_SAFE */
 
+#if PPPOS_DEBUG == LWIP_DBG_OFF
+#undef PPPDEBUG
+#define PPPDEBUG(...)
+#endif // PPPOS_DEBUG
+
 
 /*
  * Create a new PPP connection using the given serial I/O device.

@@ -140,6 +140,13 @@
 #endif
 
 /**
+ * PPPOS_DEBUG: Enable debugging for PPPoS.
+ */
+#ifndef PPPOS_DEBUG
+#define PPPOS_DEBUG                       LWIP_DBG_OFF
+#endif
+
+/**
  * PPP_INPROC_IRQ_SAFE==1 call pppos_input() using tcpip_callback().
  *
  * Please read the "PPPoS input path" chapter in the PPP documentation about this option.
