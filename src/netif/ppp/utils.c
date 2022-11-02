@@ -689,6 +689,9 @@ void ppp_info(const char *fmt, ...) {
 /*
  * ppp_dbglog - log a debug message.
  */
+#ifdef __GNUC__
+__attribute__((weak))
+#endif // __GNUC__
 void ppp_dbglog(const char *fmt, ...) {
     va_list pvar;
 
