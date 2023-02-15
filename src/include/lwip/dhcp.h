@@ -98,6 +98,10 @@ struct dhcp
   ip4_addr_t offered_si_addr;
   char boot_file_name[DHCP_BOOT_FILE_LEN];
 #endif /* LWIP_DHCP_BOOTPFILE */
+
+  u8_t ignore_gw;
+  ip4_addr_t override_gw;  
+  u8_t ignore_dns;
 };
 
 

@@ -220,6 +220,17 @@ static u16_t dhcp_option_hostname(u16_t options_out_len, u8_t *options, struct n
 #endif /* LWIP_NETIF_HOSTNAME */
 /* always add the DHCP options trailer to end and pad */
 static void dhcp_option_trailer(u16_t options_out_len, u8_t *options, struct pbuf *p_out);
+static void dhcp_clear_struct(struct dhcp *dhcp);
+
+static void dhcp_clear_struct(struct dhcp *dhcp) {
+  u8_t ignore_dns = dhcp->ignore_dns;
+  u8_t ignore_gw = dhcp->ignore_gw;
+  ip4_addr_t override_gw = dhcp->override_gw;
+  memset(dhcp, 0, sizeof(struct dhcp));
+  dhcp->ignore_dns = ignore_dns;
+  dhcp->ignore_gw = ignore_gw;
+  dhcp->override_gw = override_gw;
+}
 
 /** Ensure DHCP PCB is allocated and bound */
 static err_t
@@ -669,11 +680,18 @@ dhcp_handle_ack(struct netif *netif, struct dhcp_msg *msg_in)
 #endif /* LWIP_DHCP_GET_NTP_SRV */
 
 #if LWIP_DHCP_PROVIDE_DNS_SERVERS
+  u8_t offset = 0;
+#if LWIP_DHCP_USE_NETIF_INDEX_FOR_DNS
+  offset = netif_get_index(netif) * LWIP_DNS_SERVERS_PER_NETIF;
+#endif // LWIP_DHCP_USE_NETIF_INDEX_FOR_DNS
+  n = 0;
   /* DNS servers */
-  for (n = 0; (n < LWIP_DHCP_PROVIDE_DNS_SERVERS) && dhcp_option_given(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n); n++) {
-    ip_addr_t dns_addr;
-    ip_addr_set_ip4_u32_val(dns_addr, lwip_htonl(dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n)));
-    dns_setserver(n, &dns_addr);
+  if (!dhcp->ignore_dns) {
+    for (; (n < LWIP_DHCP_PROVIDE_DNS_SERVERS) && dhcp_option_given(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n); n++) {
+      ip_addr_t dns_addr;
+      ip_addr_set_ip4_u32_val(dns_addr, lwip_htonl(dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n)));
+      dns_setserver(offset + n, &dns_addr);
+    }
   }
 #endif /* LWIP_DHCP_PROVIDE_DNS_SERVERS */
 }
@@ -774,7 +792,7 @@ dhcp_start(struct netif *netif)
   }
 
   /* clear data structure */
-  memset(dhcp, 0, sizeof(struct dhcp));
+  dhcp_clear_struct(dhcp);
   /* dhcp_set_state(&dhcp, DHCP_STATE_OFF); */
 
   LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_start(): starting DHCP configuration\n"));
@@ -1121,6 +1139,10 @@ dhcp_bind(struct netif *netif)
     ip4_addr_get_network(&gw_addr, &dhcp->offered_ip_addr, &sn_mask);
     /* use first host address on network as gateway */
     ip4_addr_set_u32(&gw_addr, ip4_addr_get_u32(&gw_addr) | PP_HTONL(0x00000001UL));
+  }
+
+  if (dhcp->ignore_gw) {
+    gw_addr = dhcp->override_gw;
   }
 
 #if LWIP_DHCP_AUTOIP_COOP

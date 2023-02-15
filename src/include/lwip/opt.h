@@ -923,6 +923,10 @@
 #define LWIP_DHCP                       0
 #endif /* !LWIP_IPV4 */
 
+#ifndef LWIP_DHCP_USE_NETIF_INDEX_FOR_DNS
+#define LWIP_DHCP_USE_NETIF_INDEX_FOR_DNS 0
+#endif /* LWIP_DHCP_USE_NETIF_INDEX_FOR_DNS */
+
 /**
  * DHCP_DOES_ARP_CHECK==1: Do an ARP check on the offered address.
  */
@@ -1104,6 +1108,10 @@
 #if !defined DNS_MAX_NAME_LENGTH || defined __DOXYGEN__
 #define DNS_MAX_NAME_LENGTH             256
 #endif
+
+#ifndef LWIP_DNS_SERVERS_PER_NETIF
+#define LWIP_DNS_SERVERS_PER_NETIF 0
+#endif /* LWIP_DNS_SERVERS_PER_NETIF */
 
 /** The maximum of DNS servers
  * The first server can be initialized automatically by defining
