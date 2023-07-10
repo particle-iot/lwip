@@ -629,6 +629,9 @@ static void ppp_log_write(int level, char *buf) {
 /*
  * ppp_fatal - log an error message and die horribly.
  */
+#ifdef __GNUC__
+__attribute__((weak))
+#endif // __GNUC__
 void ppp_fatal(const char *fmt, ...) {
     va_list pvar;
 
@@ -642,6 +645,9 @@ void ppp_fatal(const char *fmt, ...) {
 /*
  * ppp_error - log an error message.
  */
+#ifdef __GNUC__
+__attribute__((weak))
+#endif // __GNUC__
 void ppp_error(const char *fmt, ...) {
     va_list pvar;
 
@@ -656,6 +662,9 @@ void ppp_error(const char *fmt, ...) {
 /*
  * ppp_warn - log a warning message.
  */
+#ifdef __GNUC__
+__attribute__((weak))
+#endif // __GNUC__
 void ppp_warn(const char *fmt, ...) {
     va_list pvar;
 
@@ -667,6 +676,9 @@ void ppp_warn(const char *fmt, ...) {
 /*
  * ppp_notice - log a notice-level message.
  */
+#ifdef __GNUC__
+__attribute__((weak))
+#endif // __GNUC__
 void ppp_notice(const char *fmt, ...) {
     va_list pvar;
 
@@ -678,6 +690,9 @@ void ppp_notice(const char *fmt, ...) {
 /*
  * ppp_info - log an informational message.
  */
+#ifdef __GNUC__
+__attribute__((weak))
+#endif // __GNUC__
 void ppp_info(const char *fmt, ...) {
     va_list pvar;
 
