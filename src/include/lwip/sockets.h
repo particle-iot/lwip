@@ -78,7 +78,7 @@ struct sockaddr_in {
 };
 #endif /* LWIP_IPV4 */
 
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 struct sockaddr_in6 {
   u8_t            sin6_len;      /* length of this structure    */
   sa_family_t     sin6_family;   /* AF_INET6                    */
@@ -87,7 +87,7 @@ struct sockaddr_in6 {
   struct in6_addr sin6_addr;     /* IPv6 address                */
   u32_t           sin6_scope_id; /* Set of interfaces for scope */
 };
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 
 struct sockaddr {
   u8_t        sa_len;
@@ -100,9 +100,9 @@ struct sockaddr_storage {
   sa_family_t ss_family;
   char        s2_data1[2];
   u32_t       s2_data2[3];
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
   u32_t       s2_data3[3];
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 };
 
 /* If your port already typedef's socklen_t, define SOCKLEN_T_DEFINED
@@ -236,11 +236,11 @@ struct linger {
 
 #define AF_UNSPEC       0
 #define AF_INET         2
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 #define AF_INET6        10
-#else /* LWIP_IPV6 */
+#else /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 #define AF_INET6        AF_UNSPEC
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 #define PF_INET         AF_INET
 #define PF_INET6        AF_INET6
 #define PF_UNSPEC       AF_UNSPEC
@@ -249,10 +249,10 @@ struct linger {
 #define IPPROTO_ICMP    1
 #define IPPROTO_TCP     6
 #define IPPROTO_UDP     17
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 #define IPPROTO_IPV6    41
 #define IPPROTO_ICMPV6  58
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 #define IPPROTO_UDPLITE 136
 #define IPPROTO_RAW     255
 
@@ -283,13 +283,13 @@ struct linger {
 #define TCP_KEEPCNT    0x05    /* set pcb->keep_cnt   - Use number of probes sent for get/setsockopt */
 #endif /* LWIP_TCP */
 
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 /*
  * Options for level IPPROTO_IPV6
  */
 #define IPV6_CHECKSUM       7  /* RFC3542: calculate and insert the ICMPv6 checksum for raw sockets. */
 #define IPV6_V6ONLY         27 /* RFC3493: boolean control to restrict AF_INET6 sockets to IPv6 communications only. */
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 
 #if LWIP_UDP && LWIP_UDPLITE
 /*
@@ -329,7 +329,7 @@ struct in_pktinfo {
 };
 #endif /* LWIP_IPV4 */
 
-#if LWIP_IPV6_MLD
+#if LWIP_IPV6_MLD || LWIP_IPV6_DEFINES_ONLY
 /*
  * Options and types related to IPv6 multicast membership
  */
@@ -342,7 +342,7 @@ typedef struct ipv6_mreq {
   struct in6_addr ipv6mr_multiaddr; /*  IPv6 multicast addr */
   unsigned int    ipv6mr_interface; /*  interface index, or 0 */
 } ipv6_mreq;
-#endif /* LWIP_IPV6_MLD */
+#endif /* LWIP_IPV6_MLD || LWIP_IPV6_DEFINES_ONLY */
 
 /*
  * The Type of Service provides an indication of the abstract

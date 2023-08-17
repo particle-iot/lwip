@@ -43,7 +43,7 @@
 
 #include "lwip/opt.h"
 
-#if LWIP_IPV6  /* don't build if not configured for use in lwipopts.h */
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY  /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/ip6_addr.h"
 #include "lwip/prot/ip6.h"
@@ -52,6 +52,10 @@
 #include "lwip/netif.h"
 
 #include "lwip/err.h"
+
+#endif // LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
+
+#if LWIP_IPV6
 
 #ifdef __cplusplus
 extern "C" {

@@ -63,7 +63,7 @@
 /** Global data for both IPv4 and IPv6 */
 struct ip_globals ip_data;
 
-#if LWIP_IPV4 && LWIP_IPV6
+#if LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY)
 
 const ip_addr_t ip_addr_any_type = IPADDR_ANY_TYPE_INIT;
 
@@ -145,6 +145,7 @@ ipaddr_aton(const char *cp, ip_addr_t *addr)
   return 0;
 }
 
+#if LWIP_IPV6
 /**
  * @ingroup lwip_nosys
  * If both IP versions are enabled, this function can dispatch packets to the correct one.
@@ -161,7 +162,8 @@ ip_input(struct pbuf *p, struct netif *inp)
   }
   return ERR_VAL;
 }
+#endif // LWIP_IPV6
 
-#endif /* LWIP_IPV4 && LWIP_IPV6 */
+#endif /* LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY) */
 
 #endif /* LWIP_IPV4 || LWIP_IPV6 */

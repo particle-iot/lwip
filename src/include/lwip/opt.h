@@ -2386,6 +2386,13 @@
 #endif
 
 /**
+ * LWIP_IPV6_DEFINES_ONLY==1: Enable IPv6-aware build
+ */
+#if !defined LWIP_IPV6_DEFINES_ONLY || defined __DOXYGEN__
+#define LWIP_IPV6_DEFINES_ONLY          0
+#endif
+
+/**
  * IPV6_REASS_MAXAGE: Maximum time (in multiples of IP6_REASS_TMR_INTERVAL - so seconds, normally)
  * a fragmented IP packet waits for all fragments to arrive. If not all fragments arrived
  * in this time, the whole packet is discarded.

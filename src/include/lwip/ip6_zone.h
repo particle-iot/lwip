@@ -95,7 +95,7 @@ extern "C" {
  * @{
  */
 
-#if LWIP_IPV6  /* don't build if not configured for use in lwipopts.h */
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY  /* don't build if not configured for use in lwipopts.h */
 
 /** Identifier for "no zone". */
 #define IP6_NO_ZONE 0
@@ -295,7 +295,7 @@ enum lwip_ipv6_scope_type
 
 #endif /* LWIP_IPV6_SCOPES && LWIP_IPV6_SCOPES_DEBUG */
 
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 
 #ifdef __cplusplus
 }

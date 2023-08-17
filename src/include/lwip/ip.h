@@ -114,7 +114,7 @@ struct ip_globals
   /** Header of the input packet currently being processed. */
   const struct ip_hdr *current_ip4_header;
 #endif /* LWIP_IPV4 */
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
   /** Header of the input IPv6 packet currently being processed. */
   struct ip6_hdr *current_ip6_header;
 #endif /* LWIP_IPV6 */
@@ -144,7 +144,7 @@ extern struct ip_globals ip_data;
 /** Destination IP address of current_header */
 #define ip_current_dest_addr()  (&ip_data.current_iphdr_dest)
 
-#if LWIP_IPV4 && LWIP_IPV6
+#if LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY)
 /** Get the IPv4 header of the current packet.
  * This function must only be called from a receive callback (udp_recv,
  * raw_recv, tcp_accept). It will return NULL otherwise. */
@@ -276,6 +276,28 @@ err_t ip_input(struct pbuf *p, struct netif *inp);
 
 #elif LWIP_IPV4 /* LWIP_IPV4 && LWIP_IPV6 */
 
+#if LWIP_IPV6_DEFINES_ONLY
+
+#define ip_output(p, src, dest, ttl, tos, proto) \
+        ip4_output(p, ip_2_ip4(src), ip_2_ip4(dest), ttl, tos, proto)
+#define ip_output_if(p, src, dest, ttl, tos, proto, netif) \
+        ip4_output_if(p, ip_2_ip4(src), ip_2_ip4(dest), ttl, tos, proto, netif)
+#define ip_output_if_src(p, src, dest, ttl, tos, proto, netif) \
+        ip4_output_if_src(p, ip_2_ip4(src), ip_2_ip4(dest), ttl, tos, proto, netif)
+#define ip_output_hinted(p, src, dest, ttl, tos, proto, netif_hint) \
+        ip4_output_hinted(p, ip_2_ip4(src), ip_2_ip4(dest), ttl, tos, proto, netif_hint)
+#define ip_output_if_hdrincl(p, src, dest, netif) \
+        ip4_output_if(p, ip_2_ip4(src), LWIP_IP_HDRINCL, 0, 0, 0, netif)
+#define ip_route(src, dest) \
+        ip4_route_src(ip_2_ip4(src), ip_2_ip4(dest))
+#define ip_netif_get_local_ip(netif, dest) \
+        ip4_netif_get_local_ip(netif)
+#define ip_debug_print(is_ipv6, p) ip4_debug_print(p)
+
+#define ip_input ip4_input
+
+#else
+
 #define ip_output(p, src, dest, ttl, tos, proto) \
         ip4_output(p, src, dest, ttl, tos, proto)
 #define ip_output_if(p, src, dest, ttl, tos, proto, netif) \
@@ -293,6 +315,8 @@ err_t ip_input(struct pbuf *p, struct netif *inp);
 #define ip_debug_print(is_ipv6, p) ip4_debug_print(p)
 
 #define ip_input ip4_input
+
+#endif // LWIP_IPV6_DEFINES_ONLY
 
 #elif LWIP_IPV6 /* LWIP_IPV4 && LWIP_IPV6 */
 

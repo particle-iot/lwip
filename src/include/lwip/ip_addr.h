@@ -60,7 +60,7 @@ enum lwip_ip_addr_type {
   IPADDR_TYPE_ANY = 46U
 };
 
-#if LWIP_IPV4 && LWIP_IPV6
+#if LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY)
 /**
  * @ingroup ipaddr
  * A union struct for both IP version's addresses.
@@ -257,7 +257,7 @@ int ipaddr_aton(const char *cp, ip_addr_t *addr);
 
 #define IP46_ADDR_ANY(type) (((type) == IPADDR_TYPE_V6)? IP6_ADDR_ANY : IP4_ADDR_ANY)
 
-#else /* LWIP_IPV4 && LWIP_IPV6 */
+#else /* LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY) */
 
 #define IP_ADDR_PCB_VERSION_MATCH(addr, pcb)          1
 #define IP_ADDR_PCB_VERSION_MATCH_EXACT(pcb, ipaddr)  1
@@ -400,7 +400,7 @@ extern const ip_addr_t ip_addr_broadcast;
 
 #endif /* LWIP_IPV4*/
 
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 
 extern const ip_addr_t ip6_addr_any;
 
@@ -424,7 +424,7 @@ extern const ip_addr_t ip6_addr_any;
 
 #endif
 
-#if LWIP_IPV4 && LWIP_IPV6
+#if LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY)
 /** @ingroup ipaddr */
 #define IP_ANY_TYPE    (&ip_addr_any_type)
 #else

@@ -124,7 +124,7 @@ extern const struct in6_addr in6addr_any;
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN     IP4ADDR_STRLEN_MAX
 #endif
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN    IP6ADDR_STRLEN_MAX
 #endif
@@ -143,7 +143,7 @@ extern const struct in6_addr in6addr_any;
 
 #endif /* LWIP_IPV4 */
 
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 #define inet6_addr_from_ip6addr(target_in6addr, source_ip6addr) {(target_in6addr)->un.u32_addr[0] = (source_ip6addr)->addr[0]; \
                                                                  (target_in6addr)->un.u32_addr[1] = (source_ip6addr)->addr[1]; \
                                                                  (target_in6addr)->un.u32_addr[2] = (source_ip6addr)->addr[2]; \
@@ -159,7 +159,7 @@ extern const struct in6_addr in6addr_any;
 #define inet6_ntoa(addr)                ip6addr_ntoa((const ip6_addr_t*)&(addr))
 #define inet6_ntoa_r(addr, buf, buflen) ip6addr_ntoa_r((const ip6_addr_t*)&(addr), buf, buflen)
 
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
 
 
 #ifdef __cplusplus

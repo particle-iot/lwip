@@ -42,7 +42,7 @@
 
 #include "lwip/opt.h"
 
-#if LWIP_IPV6  /* don't build if not configured for use in lwipopts.h */
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/ip_addr.h"
 #include "lwip/def.h"
@@ -377,4 +377,4 @@ u8_t ip6_addr_common_prefix_length(const ip6_addr_t* addr1, const ip6_addr_t* ad
   return result;
 }
 
-#endif /* LWIP_IPV6 */
+#endif /* LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY */
