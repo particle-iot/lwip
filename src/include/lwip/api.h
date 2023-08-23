@@ -96,7 +96,7 @@ extern "C" {
 /* Helpers to process several netconn_types by the same code */
 #define NETCONNTYPE_GROUP(t)         ((t)&0xF0)
 #define NETCONNTYPE_DATAGRAM(t)      ((t)&0xE0)
-#if LWIP_IPV6
+#if LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY
 #define NETCONN_TYPE_IPV6            0x08
 #define NETCONNTYPE_ISIPV6(t)        (((t)&NETCONN_TYPE_IPV6) != 0)
 #define NETCONNTYPE_ISUDPLITE(t)     (((t)&0xF3) == NETCONN_UDPLITE)
