@@ -3025,6 +3025,22 @@ lwip_getsockopt_impl(int s, int level, int optname, void *optval, socklen_t *opt
           *(int *)optval = udp_is_flag_set(sock->conn->pcb.udp, UDP_FLAGS_NOCHKSUM) ? 1 : 0;
           break;
 #endif /* LWIP_UDP*/
+        case SO_BINDTODEVICE:
+          LWIP_SOCKOPT_CHECK_OPTLEN_CONN(sock, *optlen, u8_t);
+#if LWIP_TCP
+          /* the support is for TCP/UDP only */
+          if (sock->conn->type == NETCONN_TCP) {
+            *(u8_t *)optval = sock->conn->pcb.tcp->netif_idx;
+          } else
+#endif /* LWIP_TCP */
+#if LWIP_UDP
+          if (sock->conn->type == NETCONN_UDP) {
+            *(u8_t *)optval = sock->conn->pcb.udp->netif_idx;
+          } else {
+#endif /* LWIP_UDP */
+          return EAFNOSUPPORT;
+          }
+          break;
         default:
           LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_getsockopt(%d, SOL_SOCKET, UNIMPL: optname=0x%x, ..)\n",
                                       s, optname));
