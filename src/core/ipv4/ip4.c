@@ -516,7 +516,7 @@ ip4_input(struct pbuf *p, struct netif *inp)
   ip_addr_copy_from_ip4(ip_data.current_iphdr_src, iphdr->src);
 
 #ifdef LWIP_HOOK_IP4_INPUT_POST_VALIDATION
-  if (LWIP_HOOK_IP4_INPUT_POST_VALIDATION(p, inp)) {
+  if (LWIP_HOOK_IP4_INPUT_POST_VALIDATION(p, iphdr, inp)) {
     /* the packet has been eaten */
     return ERR_OK;
   }
