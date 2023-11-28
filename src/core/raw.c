@@ -636,7 +636,7 @@ raw_new_ip_type(u8_t type, u8_t proto)
   struct raw_pcb *pcb;
   LWIP_ASSERT_CORE_LOCKED();
   pcb = raw_new(proto);
-#if LWIP_IPV4 && LWIP_IPV6
+#if LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY)
   if (pcb != NULL) {
     IP_SET_TYPE_VAL(pcb->local_ip,  type);
     IP_SET_TYPE_VAL(pcb->remote_ip, type);

@@ -612,7 +612,7 @@ pcb_new(struct api_msg *msg)
 
   LWIP_ASSERT("pcb_new: pcb already allocated", msg->conn->pcb.tcp == NULL);
 
-#if LWIP_IPV6 && LWIP_IPV4
+#if (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY) && LWIP_IPV4
   /* IPv6: Dual-stack by default, unless netconn_set_ipv6only() is called */
   if (NETCONNTYPE_ISIPV6(netconn_type(msg->conn))) {
     iptype = IPADDR_TYPE_ANY;
@@ -1465,7 +1465,7 @@ lwip_netconn_do_listen(void *m)
 #else  /* TCP_LISTEN_BACKLOG */
           backlog = TCP_DEFAULT_LISTEN_BACKLOG;
 #endif /* TCP_LISTEN_BACKLOG */
-#if LWIP_IPV4 && LWIP_IPV6
+#if LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY)
           /* "Socket API like" dual-stack support: If IP to listen to is IP6_ADDR_ANY,
             * and NETCONN_FLAG_IPV6_V6ONLY is NOT set, use IP_ANY_TYPE to listen
             */

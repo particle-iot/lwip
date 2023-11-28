@@ -318,7 +318,7 @@ netconn_bind(struct netconn *conn, const ip_addr_t *addr, u16_t port)
   }
 #endif /* LWIP_IPV4 */
 
-#if LWIP_IPV4 && LWIP_IPV6
+#if LWIP_IPV4 && (LWIP_IPV6 || LWIP_IPV6_DEFINES_ONLY)
   /* "Socket API like" dual-stack support: If IP to bind to is IP6_ADDR_ANY,
    * and NETCONN_FLAG_IPV6_V6ONLY is 0, use IP_ANY_TYPE to bind
    */
