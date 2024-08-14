@@ -1182,6 +1182,23 @@ lwip_recvfrom_udp_raw(struct lwip_sock *sock, int flags, struct msghdr *msg, u16
       }
     }
 #endif /* LWIP_NETBUF_RECVINFO */
+#if LWIP_NETBUF_TIMESTAMP
+    if (buf->flags & NETBUF_FLAG_TIMESTAMP) {
+      if (msg->msg_controllen >= CMSG_SPACE(sizeof(struct timespec))) {
+        struct cmsghdr *chdr = CMSG_FIRSTHDR(msg); /* This will always return a header!! */
+        struct timespec *ts = (struct timespec *)CMSG_DATA(chdr);
+        chdr->cmsg_level = SOL_SOCKET;
+        chdr->cmsg_type = SO_TIMESTAMPING;
+        chdr->cmsg_len = CMSG_LEN(sizeof(struct timespec));
+        msg->msg_controllen = CMSG_SPACE(sizeof(struct timespec));
+        ts->tv_sec = buf->timestamp / 1000;
+        ts->tv_nsec = (buf->timestamp % 1000) * 1000000;
+        wrote_msg = 1;
+      } else {
+        msg->msg_flags |= MSG_CTRUNC;
+      }
+    }
+#endif /* LWIP_NETBUF_TIMESTAMP */
 
     if (!wrote_msg) {
       msg->msg_controllen = 0;
@@ -3486,6 +3503,16 @@ lwip_setsockopt_impl(int s, int level, int optname, const void *optval, socklen_
           }
         }
         break;
+#if LWIP_NETBUF_TIMESTAMP
+        case SO_TIMESTAMPING:
+          LWIP_SOCKOPT_CHECK_OPTLEN_CONN_PCB_TYPE(sock, optlen, int, NETCONN_UDP);
+          if (*(const int *)optval) {
+            sock->conn->flags |= NETCONN_FLAG_TIMESTAMP;
+          } else {
+            sock->conn->flags &= ~NETCONN_FLAG_TIMESTAMP;
+          }
+          break;
+#endif /* LWIP_NETBUF_TIMESTAMP */
         default:
           LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, SOL_SOCKET, UNIMPL: optname=0x%x, ..)\n",
                                       s, optname));
