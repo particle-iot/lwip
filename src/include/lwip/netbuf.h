@@ -55,19 +55,24 @@ extern "C" {
 #define NETBUF_FLAG_DESTADDR    0x01
 /** This netbuf includes a checksum */
 #define NETBUF_FLAG_CHKSUM      0x02
+/** This netbuf includes a timestamp */
+#define NETBUF_FLAG_TIMESTAMP   0x80
 
 /** "Network buffer" - contains data and addressing info */
 struct netbuf {
   struct pbuf *p, *ptr;
   ip_addr_t addr;
   u16_t port;
-#if LWIP_NETBUF_RECVINFO || LWIP_CHECKSUM_ON_COPY
+#if LWIP_NETBUF_RECVINFO || LWIP_CHECKSUM_ON_COPY || LWIP_NETBUF_TIMESTAMP
   u8_t flags;
   u16_t toport_chksum;
 #if LWIP_NETBUF_RECVINFO
   ip_addr_t toaddr;
 #endif /* LWIP_NETBUF_RECVINFO */
 #endif /* LWIP_NETBUF_RECVINFO || LWIP_CHECKSUM_ON_COPY */
+#if LWIP_NETBUF_TIMESTAMP
+  u32_t timestamp;
+#endif /* LWIP_NETBUF_TIMESTAMP */
 };
 
 /* Network buffer functions: */

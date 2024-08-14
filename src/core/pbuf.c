@@ -220,6 +220,9 @@ pbuf_init_alloced_pbuf(struct pbuf *p, void *payload, u16_t tot_len, u16_t len, 
  * @return the allocated pbuf. If multiple pbufs where allocated, this
  * is the first pbuf of a pbuf chain.
  */
+
+extern void lwip_log_message(const char *fmt, ...);
+
 struct pbuf *
 pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
 {
@@ -242,6 +245,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
         u16_t qlen;
         q = (struct pbuf *)memp_malloc(MEMP_PBUF_POOL);
         if (q == NULL) {
+          lwip_log_message("pbuf alloc error PBUF_POOL\r\n");
           PBUF_POOL_IS_EMPTY();
           /* free chain so far allocated */
           if (p) {
@@ -283,6 +287,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       /* If pbuf is to be allocated in RAM, allocate memory for it. */
       p = (struct pbuf *)mem_malloc(alloc_len);
       if (p == NULL) {
+        lwip_log_message("pbuf alloc error PBUF_RAM\r\n");
         return NULL;
       }
       pbuf_init_alloced_pbuf(p, LWIP_MEM_ALIGN((void *)((u8_t *)p + SIZEOF_STRUCT_PBUF + offset)),

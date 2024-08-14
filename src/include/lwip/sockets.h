@@ -219,6 +219,8 @@ struct ifreq {
 #define SO_CONTIMEO     0x1009 /* Unimplemented: connect timeout */
 #define SO_NO_CHECK     0x100a /* don't create UDP checksum */
 #define SO_BINDTODEVICE 0x100b /* bind to device */
+#define SO_TIMESTAMPING 0x1025 /* generate timestamp for recvd packets */
+#define SO_TIMESTAMP    SO_TIMESTAMPING /* generate timestamp for recvd packets */
 
 /*
  * Structure used for manipulating linger option.

@@ -1208,6 +1208,17 @@
 #if !defined LWIP_NETBUF_RECVINFO || defined __DOXYGEN__
 #define LWIP_NETBUF_RECVINFO            0
 #endif
+
+/**
+ * LWIP_NETBUF_TIMESTAMP==1: append timestamp to netbufs
+ */
+#if !defined LWIP_NETBUF_TIMESTAMP || defined __DOXYGEN__
+#define LWIP_NETBUF_TIMESTAMP            0
+#endif
+
+#if LWIP_NETBUF_TIMESTAMP && LWIP_NETBUF_RECVINFO
+#error "LWIP_NETBUF_TIMESTAMP and LWIP_NETBUF_RECVINFO cannot be enabled together"
+#endif /* LWIP_NETBUF_TIMESTAMP && LWIP_NETBUF_RECVINFO */
 /**
  * @}
  */

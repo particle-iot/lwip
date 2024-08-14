@@ -266,6 +266,12 @@ recv_udp(void *arg, struct udp_pcb *pcb, struct pbuf *p,
       buf->toport_chksum = udphdr->dest;
     }
 #endif /* LWIP_NETBUF_RECVINFO */
+#if LWIP_NETBUF_TIMESTAMP
+    if (conn->flags & NETCONN_FLAG_TIMESTAMP) {
+      buf->timestamp = sys_now();
+      buf->flags |= NETBUF_FLAG_TIMESTAMP;
+    }
+#endif /* LWIP_NETBUF_TIMESTAMP */
   }
 
   len = p->tot_len;

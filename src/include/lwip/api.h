@@ -90,6 +90,10 @@ extern "C" {
 /** Received packet info will be recorded for this netconn */
 #define NETCONN_FLAG_PKTINFO                  0x40
 #endif /* LWIP_NETBUF_RECVINFO */
+/** NOTE: reusing the same value as for NETCONN_FLAG_PKTINFO, these options are mutually exclusive */
+#if LWIP_NETBUF_TIMESTAMP
+#define NETCONN_FLAG_TIMESTAMP                0x40
+#endif /* LWIP_NETBUF_TIMESTAMP */
 /** A FIN has been received but not passed to the application yet */
 #define NETCONN_FIN_RX_PENDING                0x80
 
