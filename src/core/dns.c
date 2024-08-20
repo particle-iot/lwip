@@ -95,6 +95,10 @@
 #include "lwip/dns.h"
 #include "lwip/prot/dns.h"
 
+#ifdef LWIP_HOOK_FILENAME
+#include LWIP_HOOK_FILENAME
+#endif // LWIP_HOOK_FILENAME
+
 #include <string.h>
 
 /** Random generator function to create random TXIDs and source ports for queries */
@@ -769,6 +773,9 @@ dns_send(u8_t idx)
   const char *hostname, *hostname_part;
   u8_t n;
   u8_t pcb_idx;
+#ifdef LWIP_HOOK_DNS_GET_NETIF_FOR_SERVER_INDEX
+  u8_t unbind = 0;
+#endif // LWIP_HOOK_DNS_GET_NETIF_FOR_SERVER_INDEX
   struct dns_table_entry *entry = &dns_table[idx];
 
   LWIP_DEBUGF(DNS_DEBUG, ("dns_send: dns_servers[%"U16_F"] \"%s\": request\n",
@@ -860,8 +867,22 @@ dns_send(u8_t idx)
     {
       dst_port = DNS_SERVER_PORT;
       dst = &dns_servers[entry->server_idx];
+#ifdef LWIP_HOOK_DNS_GET_NETIF_FOR_SERVER_INDEX
+      struct netif* bind_netif = LWIP_HOOK_DNS_GET_NETIF_FOR_SERVER_INDEX(entry->server_idx);
+      if (bind_netif) {
+        unbind = 1;
+        // This forces udp_sendto to pick bind_netif as an outgoing interface, bypassing
+        // the routing table/hooks.
+        udp_bind_netif(dns_pcbs[pcb_idx], bind_netif);
+      }
+#endif // LWIP_HOOK_DNS_GET_NETIF_FOR_SERVER_INDEX
     }
     err = udp_sendto(dns_pcbs[pcb_idx], p, dst, dst_port);
+#ifdef LWIP_HOOK_DNS_GET_NETIF_FOR_SERVER_INDEX
+    if (unbind) {
+      udp_bind_netif(dns_pcbs[pcb_idx], NULL);
+    }
+#endif // LWIP_HOOK_DNS_GET_NETIF_FOR_SERVER_INDEX
 
     /* free pbuf */
     pbuf_free(p);
