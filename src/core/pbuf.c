@@ -245,7 +245,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
         u16_t qlen;
         q = (struct pbuf *)memp_malloc(MEMP_PBUF_POOL);
         if (q == NULL) {
-          lwip_log_message("pbuf alloc error PBUF_POOL\r\n");
+          //lwip_log_message("pbuf alloc error PBUF_POOL\r\n");
           PBUF_POOL_IS_EMPTY();
           /* free chain so far allocated */
           if (p) {
@@ -287,7 +287,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       /* If pbuf is to be allocated in RAM, allocate memory for it. */
       p = (struct pbuf *)mem_malloc(alloc_len);
       if (p == NULL) {
-        lwip_log_message("pbuf alloc error PBUF_RAM\r\n");
+        //lwip_log_message("pbuf alloc error PBUF_RAM\r\n");
         return NULL;
       }
       pbuf_init_alloced_pbuf(p, LWIP_MEM_ALIGN((void *)((u8_t *)p + SIZEOF_STRUCT_PBUF + offset)),
