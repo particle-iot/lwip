@@ -179,6 +179,8 @@ struct dns_api_msg {
   /** Type of resolve call */
   u8_t dns_addrtype;
 #endif /* LWIP_IPV4 && LWIP_IPV6 */
+  u8_t flags;
+  u8_t if_idx;
   /** This semaphore is posted when the name is resolved, the application thread
       should wait on it. */
   sys_sem_t API_MSG_M_DEF_SEM(sem);
@@ -214,6 +216,7 @@ void lwip_netconn_do_join_leave_group_netif(void *m);
 
 #if LWIP_DNS
 void lwip_netconn_do_gethostbyname(void *arg);
+void lwip_netconn_do_gethostbyname_ex(void *arg);
 #endif /* LWIP_DNS */
 
 struct netconn* netconn_alloc(enum netconn_type t, netconn_callback callback);

@@ -1268,10 +1268,10 @@ netconn_join_leave_group_netif(struct netconn *conn,
  */
 #if LWIP_IPV4 && LWIP_IPV6
 err_t
-netconn_gethostbyname_addrtype(const char *name, ip_addr_t *addr, u8_t dns_addrtype)
+netconn_gethostbyname_addrtype_ex(const char *name, ip_addr_t *addr, u8_t dns_addrtype, u8_t flags, u8_t if_idx)
 #else
 err_t
-netconn_gethostbyname(const char *name, ip_addr_t *addr)
+netconn_gethostbyname_ex(const char *name, ip_addr_t *addr, u8_t flags, u8_t if_idx)
 #endif
 {
   API_VAR_DECLARE(struct dns_api_msg, msg);
@@ -1321,6 +1321,8 @@ netconn_gethostbyname(const char *name, ip_addr_t *addr)
     return err;
   }
 #endif /* LWIP_NETCONN_SEM_PER_THREAD */
+  msg.if_idx = if_idx;
+  msg.flags = flags;
 
   cberr = tcpip_send_msg_wait_sem(lwip_netconn_do_gethostbyname, &API_VAR_REF(msg), API_EXPR_REF(API_VAR_REF(msg).sem));
 #if !LWIP_NETCONN_SEM_PER_THREAD
@@ -1339,6 +1341,18 @@ netconn_gethostbyname(const char *name, ip_addr_t *addr)
   API_VAR_FREE(MEMP_DNS_API_MSG, msg);
   return err;
 }
+
+#if LWIP_IPV4 && LWIP_IPV6
+err_t
+netconn_gethostbyname_addrtype(const char *name, ip_addr_t *addr, u8_t dns_addrtype) {
+  return netconn_gethostbyname_addrtype_ex(name, addr, dns_addrtype, 0, 0);
+}
+#else
+err_t
+netconn_gethostbyname(const char *name, ip_addr_t *addr) {
+  return netconn_gethostbyname_ex(name, addr, 0, 0);
+}
+#endif
 #endif /* LWIP_DNS*/
 
 #if LWIP_NETCONN_SEM_PER_THREAD
