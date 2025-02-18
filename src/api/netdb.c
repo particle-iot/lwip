@@ -266,8 +266,8 @@ lwip_freeaddrinfo(struct addrinfo *ai)
  * @todo: implement AI_V4MAPPED, AI_ADDRCONFIG
  */
 int
-lwip_getaddrinfo(const char *nodename, const char *servname,
-                 const struct addrinfo *hints, struct addrinfo **res)
+lwip_getaddrinfo_ex(const char *nodename, const char *servname,
+                 const struct addrinfo *hints, struct addrinfo **res, u8_t if_idx)
 {
   err_t err;
   ip_addr_t addr;
@@ -334,7 +334,11 @@ lwip_getaddrinfo(const char *nodename, const char *servname,
         type = NETCONN_DNS_IPV6;
       }
 #endif /* LWIP_IPV4 && LWIP_IPV6 */
-      err = netconn_gethostbyname_addrtype(nodename, &addr, type);
+      u8_t flags = 0;
+      if (hints && hints->ai_flags & AI_FLUSHCACHE) {
+        flags |= LWIP_DNS_FLUSH_CACHE;
+      }
+      err = netconn_gethostbyname_addrtype_ex(nodename, &addr, type, flags, if_idx);
       if (err != ERR_OK) {
         return EAI_FAIL;
       }
@@ -409,6 +413,13 @@ lwip_getaddrinfo(const char *nodename, const char *servname,
   *res = ai;
 
   return 0;
+}
+
+int
+lwip_getaddrinfo(const char *nodename, const char *servname,
+                 const struct addrinfo *hints, struct addrinfo **res)
+{
+  return lwip_getaddrinfo_ex(nodename, servname, hints, res, 0);
 }
 
 #endif /* LWIP_DNS && LWIP_SOCKET */

@@ -86,6 +86,7 @@ extern "C" {
 #define AI_V4MAPPED     0x10
 #define AI_ALL          0x20
 #define AI_ADDRCONFIG   0x40
+#define AI_FLUSHCACHE   0x40000000
 #endif /* LWIP_DNS_API_DEFINE_FLAGS */
 
 #if LWIP_DNS_API_DECLARE_STRUCTS
@@ -127,6 +128,10 @@ int lwip_getaddrinfo(const char *nodename,
        const char *servname,
        const struct addrinfo *hints,
        struct addrinfo **res);
+int lwip_getaddrinfo_ex(const char *nodename,
+       const char *servname,
+       const struct addrinfo *hints,
+       struct addrinfo **res, u8_t if_idx);
 
 #if LWIP_COMPAT_SOCKETS
 /** @ingroup netdbapi */
@@ -139,6 +144,8 @@ int lwip_getaddrinfo(const char *nodename,
 /** @ingroup netdbapi */
 #define getaddrinfo(nodname, servname, hints, res) \
        lwip_getaddrinfo(nodname, servname, hints, res)
+#define getaddrinfo_ex(nodname, servname, hints, res, if_idx) \
+       lwip_getaddrinfo_ex(nodname, servname, hints, res, if_idx)
 #endif /* LWIP_COMPAT_SOCKETS */
 
 #ifdef __cplusplus

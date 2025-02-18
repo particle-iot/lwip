@@ -68,6 +68,8 @@ extern "C" {
 #define LWIP_DNS_ADDRTYPE_DEFAULT   LWIP_DNS_ADDRTYPE_IPV6
 #endif
 
+#define LWIP_DNS_FLUSH_CACHE (0x01)
+
 #if DNS_LOCAL_HOSTLIST
 /** struct used for local host-list */
 struct local_hostlist_entry {
@@ -111,7 +113,11 @@ err_t            dns_gethostbyname(const char *hostname, ip_addr_t *addr,
 err_t            dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *addr,
                                    dns_found_callback found, void *callback_arg,
                                    u8_t dns_addrtype);
-
+err_t            dns_gethostbyname_ex(const char *hostname, ip_addr_t *addr,
+                                   dns_found_callback found, void *callback_arg, u8_t flags, u8_t if_idx);
+err_t            dns_gethostbyname_addrtype_ex(const char *hostname, ip_addr_t *addr,
+                                   dns_found_callback found, void *callback_arg,
+                                   u8_t dns_addrtype, u8_t flags, u8_t if_idx);
 
 #if DNS_LOCAL_HOSTLIST
 size_t         dns_local_iterate(dns_found_callback iterator_fn, void *iterator_arg);

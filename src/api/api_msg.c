@@ -2146,7 +2146,7 @@ lwip_netconn_do_dns_found(const char *name, const ip_addr_t *ipaddr, void *arg)
  * @param arg the dns_api_msg pointing to the query
  */
 void
-lwip_netconn_do_gethostbyname(void *arg)
+lwip_netconn_do_gethostbyname_ex(void *arg)
 {
   struct dns_api_msg *msg = (struct dns_api_msg *)arg;
   u8_t addrtype =
@@ -2156,8 +2156,8 @@ lwip_netconn_do_gethostbyname(void *arg)
     LWIP_DNS_ADDRTYPE_DEFAULT;
 #endif
 
-  API_EXPR_DEREF(msg->err) = dns_gethostbyname_addrtype(msg->name,
-                             API_EXPR_REF(msg->addr), lwip_netconn_do_dns_found, msg, addrtype);
+  API_EXPR_DEREF(msg->err) = dns_gethostbyname_addrtype_ex(msg->name,
+                             API_EXPR_REF(msg->addr), lwip_netconn_do_dns_found, msg, addrtype, msg->flags, msg->if_idx);
 #if LWIP_TCPIP_CORE_LOCKING
   /* For core locking, only block if we need to wait for answer/timeout */
   if (API_EXPR_DEREF(msg->err) == ERR_INPROGRESS) {
@@ -2173,6 +2173,12 @@ lwip_netconn_do_gethostbyname(void *arg)
     sys_sem_signal(API_EXPR_REF_SEM(msg->sem));
   }
 #endif /* LWIP_TCPIP_CORE_LOCKING */
+}
+
+void
+lwip_netconn_do_gethostbyname(void *arg)
+{
+  return lwip_netconn_do_gethostbyname_ex(arg);
 }
 #endif /* LWIP_DNS */
 
