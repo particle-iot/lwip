@@ -1516,6 +1516,7 @@ dns_enqueue(const char *name, size_t hostnamelen, dns_found_callback found,
   entry->state = DNS_STATE_NEW;
   entry->seqno = dns_seqno;
   entry->if_idx = if_idx;
+  entry->server_idx = 0;
   LWIP_DNS_SET_ADDRTYPE(entry->reqaddrtype, dns_addrtype);
   LWIP_DNS_SET_ADDRTYPE(req->reqaddrtype, dns_addrtype);
   req->found = found;
