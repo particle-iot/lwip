@@ -779,6 +779,11 @@ void ppp_input(ppp_pcb *pcb, struct pbuf *pb) {
 
   magic_randomize();
 
+#if PPP_LCP_ADAPTIVE
+  /* Track all received PPP frames for adaptive LCP echo */
+  pcb->link_pkts_in++;
+#endif /* PPP_LCP_ADAPTIVE */
+
   if (pb->len < 2) {
     PPPDEBUG(LOG_ERR, ("ppp_input[%d]: packet too short\n", pcb->netif->num));
     goto drop;

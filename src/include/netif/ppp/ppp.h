@@ -384,6 +384,10 @@ struct ppp_pcb_s {
   u16_t peer_mru;                /* currently negotiated peer MRU */
   u8_t lcp_echos_pending;        /* Number of outstanding echo msgs */
   u8_t lcp_echo_number;          /* ID number of next echo frame */
+#if PPP_LCP_ADAPTIVE
+  u32_t link_pkts_in;            /* Total received PPP frames (for adaptive echo) */
+  u32_t link_pkts_in_last;       /* pkts_in as of the last adaptive echo check */
+#endif /* PPP_LCP_ADAPTIVE */
 
   u8_t num_np_open;              /* Number of network protocols which we have opened. */
   u8_t num_np_up;                /* Number of network protocols which have come up. */

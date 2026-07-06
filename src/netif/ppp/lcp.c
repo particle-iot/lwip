@@ -2731,15 +2731,8 @@ static void LcpSendEchoRequest(fsm *f) {
      * no traffic was received since the last one.
      */
     if (pcb->settings.lcp_echo_adaptive) {
-	static unsigned int last_pkts_in = 0;
-
-#if PPP_STATS_SUPPORT
-	update_link_stats(f->unit);
-	link_stats_valid = 0;
-#endif /* PPP_STATS_SUPPORT */
-
-	if (link_stats.pkts_in != last_pkts_in) {
-	    last_pkts_in = link_stats.pkts_in;
+	if (pcb->link_pkts_in != pcb->link_pkts_in_last) {
+	    pcb->link_pkts_in_last = pcb->link_pkts_in;
 	    return;
 	}
     }
