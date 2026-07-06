@@ -604,12 +604,12 @@ tcp_input_delayed_close(struct tcp_pcb *pcb)
   if (recv_flags & TF_CLOSED) {
     /* The connection has been closed and we will deallocate the
         PCB. */
-    if (!(pcb->flags & TF_RXCLOSED)) {
-      /* Connection closed although the application has only shut down the
-          tx side: call the PCB's err callback and indicate the closure to
-          ensure the application doesn't continue using the PCB. */
-      TCP_EVENT_ERR(pcb->state, pcb->errf, pcb->callback_arg, ERR_CLSD);
-    }
+    /* Always call the err callback to notify the application (netconn)
+        that the PCB has been freed. Without this, the netconn layer
+        keeps a reference to the freed PCB, and a subsequent close()
+        call frees it again, causing a TCP_PCB double-free.
+        See: https://savannah.nongnu.org/bugs/?62141 */
+    TCP_EVENT_ERR(pcb->state, pcb->errf, pcb->callback_arg, ERR_CLSD);
     tcp_pcb_remove(&tcp_active_pcbs, pcb);
     tcp_free(pcb);
     return 1;
