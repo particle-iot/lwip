@@ -983,27 +983,30 @@ lwip_netconn_do_close_internal(struct netconn *conn  WRITE_DELAYED_PARAM)
 #if LWIP_SO_LINGER
     /* check linger possibilites before calling tcp_close */
     err = ERR_OK;
-    /* linger enabled/required at all? (i.e. is there untransmitted data left?) */
-    if ((conn->linger >= 0) && (conn->pcb.tcp->unsent || conn->pcb.tcp->unacked)) {
-      if ((conn->linger == 0)) {
-        /* data left but linger prevents waiting */
+    /* SO_LINGER with l_linger == 0 means "on close, discard any data and send a
+     * RST" (POSIX). Do so unconditionally - not only when data is still pending -
+     * so the PCB is freed immediately instead of lingering in FIN_WAIT/TIME_WAIT.
+     * This lets a RAM-constrained device reclaim scarce TCP PCBs right away when
+     * many short-lived connections churn (e.g. iperf control sockets). */
+    if (conn->linger == 0) {
+      tcp_abort(tpcb);
+      tpcb = NULL;
+    }
+    /* linger > 0: only relevant if there is untransmitted data left */
+    else if ((conn->linger > 0) && (conn->pcb.tcp->unsent || conn->pcb.tcp->unacked)) {
+      /* data left and linger says we should wait */
+      if (netconn_is_nonblocking(conn)) {
+        /* data left on a nonblocking netconn -> cannot linger */
+        err = ERR_WOULDBLOCK;
+      } else if ((s32_t)(sys_now() - conn->current_msg->msg.sd.time_started) >=
+                 (conn->linger * 1000)) {
+        /* data left but linger timeout has expired (this happens on further
+           calls to this function through poll_tcp */
         tcp_abort(tpcb);
         tpcb = NULL;
-      } else if (conn->linger > 0) {
-        /* data left and linger says we should wait */
-        if (netconn_is_nonblocking(conn)) {
-          /* data left on a nonblocking netconn -> cannot linger */
-          err = ERR_WOULDBLOCK;
-        } else if ((s32_t)(sys_now() - conn->current_msg->msg.sd.time_started) >=
-                   (conn->linger * 1000)) {
-          /* data left but linger timeout has expired (this happens on further
-             calls to this function through poll_tcp */
-          tcp_abort(tpcb);
-          tpcb = NULL;
-        } else {
-          /* data left -> need to wait for ACK after successful close */
-          linger_wait_required = 1;
-        }
+      } else {
+        /* data left -> need to wait for ACK after successful close */
+        linger_wait_required = 1;
       }
     }
     if ((err == ERR_OK) && (tpcb != NULL))
