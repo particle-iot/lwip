@@ -983,12 +983,7 @@ lwip_netconn_do_close_internal(struct netconn *conn  WRITE_DELAYED_PARAM)
 #if LWIP_SO_LINGER
     /* check linger possibilites before calling tcp_close */
     err = ERR_OK;
-    /* SO_LINGER with l_linger == 0 means "on close, discard any data and send a
-     * RST" (POSIX). Do so unconditionally - not only when data is still pending -
-     * so the PCB is freed immediately instead of lingering in FIN_WAIT/TIME_WAIT.
-     * This lets a RAM-constrained device reclaim scarce TCP PCBs right away when
-     * many short-lived connections churn (e.g. iperf control sockets). */
-    if (conn->linger == 0) {
+    if (conn->linger == 0 && tpcb->state != LISTEN) {
       tcp_abort(tpcb);
       tpcb = NULL;
     }
